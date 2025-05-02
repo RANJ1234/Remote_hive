@@ -1,0 +1,387 @@
+{% extends 'base.html' %}
+
+{% block title %}Jobs - Remote Hive{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <!-- Search Section -->
+    <div class="search-section mb-4 p-4 bg-light rounded shadow-sm">
+        <h2 class="h4 mb-4">Find your perfect job</h2>
+        <form action="{{ url_for('search') }}" method="get">
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <div class="input-group">
+                        <span class="input-group-text bg-white">
+                            <i class="fas fa-search"></i>
+                        </span>
+                        {{ search_form.query(class="form-control", placeholder="Job title, skills, or company") }}
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="input-group">
+                        <span class="input-group-text bg-white">
+                            <i class="fas fa-map-marker-alt"></i>
+                        </span>
+                        {{ search_form.location(class="form-control", placeholder="Location") }}
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <select class="form-select" name="job_type">
+                        <option value="">All Job Types</option>
+                        <option value="Full-time">Full-time</option>
+                        <option value="Part-time">Part-time</option>
+                        <option value="Contract">Contract</option>
+                        <option value="Internship">Internship</option>
+                        <option value="Freelance">Freelance</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-search me-2"></i>Search
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="filters mt-3">
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="checkbox" name="remote" value="true" id="remoteFilter">
+                    <label class="form-check-label" for="remoteFilter">Remote only</label>
+                </div>
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="checkbox" name="recent" value="true" id="recentFilter">
+                    <label class="form-check-label" for="recentFilter">Last 7 days</label>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <!-- Job Results -->
+    <div class="row mb-4">
+        <!-- Filters Column (visible on desktop only) -->
+        <div class="col-lg-3 d-none d-lg-block">
+            <div class="filters-sidebar p-3 bg-white rounded shadow-sm">
+                <h5 class="filters-title mb-3">Refine Results</h5>
+                
+                <div class="filter-group mb-3">
+                    <h6 class="filter-heading">Experience Level</h6>
+                    <div class="form-check">
+                        <input class="form-check-input filter-checkbox" type="checkbox" value="0-1 years" id="exp1">
+                        <label class="form-check-label" for="exp1">0-1 years</label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input filter-checkbox" type="checkbox" value="1-3 years" id="exp2">
+                        <label class="form-check-label" for="exp2">1-3 years</label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input filter-checkbox" type="checkbox" value="3-5 years" id="exp3">
+                        <label class="form-check-label" for="exp3">3-5 years</label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input filter-checkbox" type="checkbox" value="5-10 years" id="exp4">
+                        <label class="form-check-label" for="exp4">5-10 years</label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input filter-checkbox" type="checkbox" value="10+ years" id="exp5">
+                        <label class="form-check-label" for="exp5">10+ years</label>
+                    </div>
+                </div>
+
+                <div class="filter-group mb-3">
+                    <h6 class="filter-heading">Salary Range</h6>
+                    <div class="form-check">
+                        <input class="form-check-input filter-checkbox" type="checkbox" value="0-3" id="sal1">
+                        <label class="form-check-label" for="sal1">0-3 LPA</label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input filter-checkbox" type="checkbox" value="3-6" id="sal2">
+                        <label class="form-check-label" for="sal2">3-6 LPA</label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input filter-checkbox" type="checkbox" value="6-10" id="sal3">
+                        <label class="form-check-label" for="sal3">6-10 LPA</label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input filter-checkbox" type="checkbox" value="10-15" id="sal4">
+                        <label class="form-check-label" for="sal4">10-15 LPA</label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input filter-checkbox" type="checkbox" value="15+" id="sal5">
+                        <label class="form-check-label" for="sal5">15+ LPA</label>
+                    </div>
+                </div>
+
+                <div class="filter-group mb-3">
+                    <h6 class="filter-heading">Job Type</h6>
+                    <div class="form-check">
+                        <input class="form-check-input filter-checkbox" type="checkbox" value="Full-time" id="type1">
+                        <label class="form-check-label" for="type1">Full-time</label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input filter-checkbox" type="checkbox" value="Part-time" id="type2">
+                        <label class="form-check-label" for="type2">Part-time</label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input filter-checkbox" type="checkbox" value="Contract" id="type3">
+                        <label class="form-check-label" for="type3">Contract</label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input filter-checkbox" type="checkbox" value="Internship" id="type4">
+                        <label class="form-check-label" for="type4">Internship</label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input filter-checkbox" type="checkbox" value="Freelance" id="type5">
+                        <label class="form-check-label" for="type5">Freelance</label>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Job Listings Column -->
+        <div class="col-lg-9">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h2 class="h4 mb-0">Job Listings</h2>
+                <div class="d-flex align-items-center">
+                    <label class="me-2 text-nowrap">Sort by:</label>
+                    <select class="form-select form-select-sm" id="sortJobs">
+                        <option value="relevance">Relevance</option>
+                        <option value="newest">Date: Newest first</option>
+                        <option value="oldest">Date: Oldest first</option>
+                        <option value="salary_high">Salary: High to low</option>
+                        <option value="salary_low">Salary: Low to high</option>
+                    </select>
+                </div>
+            </div>
+
+            {% if jobs %}
+                {% if jobs.items is defined %}
+                    <!-- Paginated jobs -->
+                    {% for job in jobs.items %}
+                        <div class="job-card card mb-3 shadow-sm">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between">
+                                    <div>
+                                        <h5 class="card-title mb-1">
+                                            <a href="{{ url_for('job_details', job_id=job.id) }}" class="job-title-link">{{ job.title }}</a>
+                                        </h5>
+                                        <h6 class="card-subtitle mb-2">
+                                            <a href="{{ url_for('company_details', company_id=job.company.id) }}" class="company-link text-muted">{{ job.company.name }}</a>
+                                        </h6>
+                                    </div>
+                                    <div class="company-logo">
+                                        {% if job.company.logo_path %}
+                                            <img src="{{ url_for('static', filename=job.company.logo_path) }}" alt="{{ job.company.name }}" class="img-fluid" style="max-height: 50px;">
+                                        {% else %}
+                                            <div class="placeholder-logo small">{{ job.company.name[0] }}</div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                
+                                <div class="job-details mt-3">
+                                    <div class="row">
+                                        <div class="col-md-6 mb-2">
+                                            <i class="fas fa-map-marker-alt text-muted me-2"></i>
+                                            {% if job.is_remote %}
+                                                Remote{% if job.location %} / {{ job.location }}{% endif %}
+                                            {% else %}
+                                                {{ job.location }}
+                                            {% endif %}
+                                        </div>
+                                        <div class="col-md-6 mb-2">
+                                            <i class="fas fa-briefcase text-muted me-2"></i>
+                                            {{ job.experience_required }}
+                                        </div>
+                                        <div class="col-md-6 mb-2">
+                                            <i class="fas fa-rupee-sign text-muted me-2"></i>
+                                            {% if job.salary_min and job.salary_max %}
+                                                {{ job.salary_min }}-{{ job.salary_max }} LPA
+                                            {% else %}
+                                                Not disclosed
+                                            {% endif %}
+                                        </div>
+                                        <div class="col-md-6 mb-2">
+                                            <i class="fas fa-clock text-muted me-2"></i>
+                                            Posted {{ time_since(job.posted_date) }}
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="job-skills mt-2 mb-2">
+                                    {% for skill in job.skills %}
+                                        <span class="badge bg-light text-dark me-1">{{ skill.name }}</span>
+                                    {% endfor %}
+                                </div>
+                                
+                                <div class="d-flex justify-content-between align-items-center mt-3">
+                                    <span class="badge bg-{{ 'primary' if job.job_type == 'Full-time' else 'secondary' }}">{{ job.job_type }}</span>
+                                    <a href="{{ url_for('job_details', job_id=job.id) }}" class="btn btn-outline-primary btn-sm">View Details</a>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+
+                    <!-- Pagination -->
+                    {% if jobs.pages > 1 %}
+                        <nav aria-label="Job listings pagination">
+                            <ul class="pagination justify-content-center">
+                                {% if jobs.has_prev %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="{{ url_for('jobs', page=jobs.prev_num) }}" aria-label="Previous">
+                                            <span aria-hidden="true">&laquo;</span>
+                                        </a>
+                                    </li>
+                                {% else %}
+                                    <li class="page-item disabled">
+                                        <span class="page-link" aria-hidden="true">&laquo;</span>
+                                    </li>
+                                {% endif %}
+                                
+                                {% for page_num in jobs.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
+                                    {% if page_num %}
+                                        {% if page_num == jobs.page %}
+                                            <li class="page-item active">
+                                                <span class="page-link">{{ page_num }}</span>
+                                            </li>
+                                        {% else %}
+                                            <li class="page-item">
+                                                <a class="page-link" href="{{ url_for('jobs', page=page_num) }}">{{ page_num }}</a>
+                                            </li>
+                                        {% endif %}
+                                    {% else %}
+                                        <li class="page-item disabled">
+                                            <span class="page-link">...</span>
+                                        </li>
+                                    {% endif %}
+                                {% endfor %}
+                                
+                                {% if jobs.has_next %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="{{ url_for('jobs', page=jobs.next_num) }}" aria-label="Next">
+                                            <span aria-hidden="true">&raquo;</span>
+                                        </a>
+                                    </li>
+                                {% else %}
+                                    <li class="page-item disabled">
+                                        <span class="page-link" aria-hidden="true">&raquo;</span>
+                                    </li>
+                                {% endif %}
+                            </ul>
+                        </nav>
+                    {% endif %}
+                {% else %}
+                    <!-- Non-paginated jobs -->
+                    {% for job in jobs %}
+                        <div class="job-card card mb-3 shadow-sm">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between">
+                                    <div>
+                                        <h5 class="card-title mb-1">
+                                            <a href="{{ url_for('job_details', job_id=job.id) }}" class="job-title-link">{{ job.title }}</a>
+                                        </h5>
+                                        <h6 class="card-subtitle mb-2">
+                                            <a href="{{ url_for('company_details', company_id=job.company.id) }}" class="company-link text-muted">{{ job.company.name }}</a>
+                                        </h6>
+                                    </div>
+                                    <div class="company-logo">
+                                        {% if job.company.logo_path %}
+                                            <img src="{{ url_for('static', filename=job.company.logo_path) }}" alt="{{ job.company.name }}" class="img-fluid" style="max-height: 50px;">
+                                        {% else %}
+                                            <div class="placeholder-logo small">{{ job.company.name[0] }}</div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                
+                                <div class="job-details mt-3">
+                                    <div class="row">
+                                        <div class="col-md-6 mb-2">
+                                            <i class="fas fa-map-marker-alt text-muted me-2"></i>
+                                            {% if job.is_remote %}
+                                                Remote{% if job.location %} / {{ job.location }}{% endif %}
+                                            {% else %}
+                                                {{ job.location }}
+                                            {% endif %}
+                                        </div>
+                                        <div class="col-md-6 mb-2">
+                                            <i class="fas fa-briefcase text-muted me-2"></i>
+                                            {{ job.experience_required }}
+                                        </div>
+                                        <div class="col-md-6 mb-2">
+                                            <i class="fas fa-rupee-sign text-muted me-2"></i>
+                                            {% if job.salary_min and job.salary_max %}
+                                                {{ job.salary_min }}-{{ job.salary_max }} LPA
+                                            {% else %}
+                                                Not disclosed
+                                            {% endif %}
+                                        </div>
+                                        <div class="col-md-6 mb-2">
+                                            <i class="fas fa-clock text-muted me-2"></i>
+                                            Posted {{ time_since(job.posted_date) }}
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="job-skills mt-2 mb-2">
+                                    {% for skill in job.skills %}
+                                        <span class="badge bg-light text-dark me-1">{{ skill.name }}</span>
+                                    {% endfor %}
+                                </div>
+                                
+                                <div class="d-flex justify-content-between align-items-center mt-3">
+                                    <span class="badge bg-{{ 'primary' if job.job_type == 'Full-time' else 'secondary' }}">{{ job.job_type }}</span>
+                                    <a href="{{ url_for('job_details', job_id=job.id) }}" class="btn btn-outline-primary btn-sm">View Details</a>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% else %}
+                <div class="no-jobs-found text-center py-5">
+                    <i class="fas fa-search fa-3x text-muted mb-3"></i>
+                    <h3>No jobs found</h3>
+                    <p class="text-muted">Try adjusting your search criteria or browse all available jobs.</p>
+                    <a href="{{ url_for('jobs') }}" class="btn btn-primary mt-2">View All Jobs</a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Filter functionality (client-side demo)
+        const filterCheckboxes = document.querySelectorAll('.filter-checkbox');
+        filterCheckboxes.forEach(checkbox => {
+            checkbox.addEventListener('change', function() {
+                // In a real implementation, this would trigger a form submission
+                // or an AJAX request to filter results
+                console.log(`Filter ${this.value} ${this.checked ? 'checked' : 'unchecked'}`);
+            });
+        });
+
+        // Sorting functionality
+        const sortSelect = document.getElementById('sortJobs');
+        if (sortSelect) {
+            sortSelect.addEventListener('change', function() {
+                // Get current URL and parameters
+                let url = new URL(window.location);
+                
+                // Add or update sort parameter
+                url.searchParams.set('sort', this.value);
+                
+                // Navigate to the new URL
+                window.location = url.toString();
+            });
+            
+            // Set current sort value from URL if exists
+            const urlParams = new URLSearchParams(window.location.search);
+            const sortParam = urlParams.get('sort');
+            if (sortParam) {
+                sortSelect.value = sortParam;
+            }
+        }
+    });
+</script>
+{% endblock %}

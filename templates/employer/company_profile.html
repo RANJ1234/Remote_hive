@@ -1,0 +1,283 @@
+{% extends 'base.html' %}
+
+{% block title %}Company Profile - Remote Hive{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <!-- Sidebar -->
+        <div class="col-lg-3">
+            <div class="employer-sidebar card shadow-sm mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Employer Dashboard</h5>
+                </div>
+                <div class="list-group list-group-flush">
+                    <a href="{{ url_for('employer_dashboard') }}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-tachometer-alt me-2"></i> Dashboard
+                    </a>
+                    <a href="{{ url_for('employer_company_profile') }}" class="list-group-item list-group-item-action active">
+                        <i class="fas fa-building me-2"></i> Company Profile
+                    </a>
+                    <a href="{{ url_for('employer_jobs') }}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-briefcase me-2"></i> Manage Jobs
+                    </a>
+                    <a href="{{ url_for('employer_post_job') }}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-plus-circle me-2"></i> Post New Job
+                    </a>
+                    <a href="{{ url_for('employer_applications') }}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-file-alt me-2"></i> Applications
+                    </a>
+                </div>
+            </div>
+            
+            {% if company %}
+            <!-- Company Preview -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-light py-3">
+                    <h6 class="m-0 font-weight-bold">Company Preview</h6>
+                </div>
+                <div class="card-body text-center">
+                    {% if company.logo_path %}
+                        <img src="{{ url_for('static', filename=company.logo_path) }}" alt="{{ company.name }}" class="company-logo-md mb-3">
+                    {% else %}
+                        <div class="placeholder-logo mb-3">{{ company.name[0] }}</div>
+                    {% endif %}
+                    <h5 class="card-title">{{ company.name }}</h5>
+                    {% if company.rating > 0 %}
+                    <div class="company-rating mb-2">
+                        <span class="rating-stars">
+                            {% for i in range(5) %}
+                                {% if i < company.rating|int %}
+                                    <i class="fas fa-star text-warning"></i>
+                                {% elif i < company.rating|round(0, 'ceil') %}
+                                    <i class="fas fa-star-half-alt text-warning"></i>
+                                {% else %}
+                                    <i class="far fa-star text-warning"></i>
+                                {% endif %}
+                            {% endfor %}
+                        </span>
+                        <span class="rating-text">{{ company.rating|round(1) }} 
+                            {% if company.review_count > 0 %}
+                            ({{ company.review_count }} reviews)
+                            {% endif %}
+                        </span>
+                    </div>
+                    {% endif %}
+                    <p class="text-muted">
+                        <i class="fas fa-industry me-1"></i> {{ company.industry or 'Industry not set' }}
+                    </p>
+                    <a href="{{ url_for('company_details', company_id=company.id) }}" class="btn btn-outline-primary btn-sm" target="_blank">
+                        <i class="fas fa-external-link-alt me-1"></i> View Public Profile
+                    </a>
+                </div>
+            </div>
+            {% endif %}
+            
+            <!-- Profile Tips -->
+            <div class="card shadow-sm">
+                <div class="card-header bg-light py-3">
+                    <h6 class="m-0 font-weight-bold">Profile Tips</h6>
+                </div>
+                <div class="card-body">
+                    <div class="tip-item mb-3">
+                        <h6 class="mb-1"><i class="fas fa-image text-info me-1"></i> Upload a Logo</h6>
+                        <p class="text-muted small mb-0">Companies with logos get up to 30% more views.</p>
+                    </div>
+                    <div class="tip-item mb-3">
+                        <h6 class="mb-1"><i class="fas fa-file-alt text-info me-1"></i> Detailed Description</h6>
+                        <p class="text-muted small mb-0">Clearly showcase your company culture, mission, and values.</p>
+                    </div>
+                    <div class="tip-item">
+                        <h6 class="mb-1"><i class="fas fa-tags text-info me-1"></i> Select Categories</h6>
+                        <p class="text-muted small mb-0">Choose relevant categories to help job seekers find your company.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Main Content -->
+        <div class="col-lg-9">
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-light py-3">
+                    <h5 class="mb-0">{{ 'Update Company Profile' if company else 'Create Company Profile' }}</h5>
+                </div>
+                <div class="card-body p-4">
+                    <form method="POST" enctype="multipart/form-data">
+                        {{ form.hidden_tag() }}
+                        
+                        <!-- Basic Company Details -->
+                        <div class="mb-4">
+                            <h5 class="section-title mb-3">Basic Company Details</h5>
+                            
+                            <div class="mb-3">
+                                <label for="name" class="form-label">Company Name <span class="text-danger">*</span></label>
+                                {{ form.name(class="form-control", placeholder="Enter your company name") }}
+                                {% if form.name.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in form.name.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="website" class="form-label">Company Website <span class="text-danger">*</span></label>
+                                {{ form.website(class="form-control", placeholder="https://www.yourcompany.com") }}
+                                {% if form.website.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in form.website.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="industry" class="form-label">Industry <span class="text-danger">*</span></label>
+                                    {{ form.industry(class="form-control", placeholder="e.g. Technology, Healthcare, Finance") }}
+                                    {% if form.industry.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {% for error in form.industry.errors %}
+                                                {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="company_type" class="form-label">Company Type</label>
+                                    {{ form.company_type(class="form-select") }}
+                                    {% if form.company_type.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {% for error in form.company_type.errors %}
+                                                {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="company_size" class="form-label">Company Size</label>
+                                    {{ form.company_size(class="form-select") }}
+                                    {% if form.company_size.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {% for error in form.company_size.errors %}
+                                                {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="founded_year" class="form-label">Founded Year</label>
+                                    {{ form.founded_year(class="form-control", type="number", placeholder="e.g. 2010") }}
+                                    {% if form.founded_year.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {% for error in form.founded_year.errors %}
+                                                {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="headquarters" class="form-label">Headquarters</label>
+                                {{ form.headquarters(class="form-control", placeholder="e.g. Bangalore, India") }}
+                                {% if form.headquarters.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in form.headquarters.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <!-- Company Categories -->
+                        <div class="mb-4">
+                            <h5 class="section-title mb-3">Company Categories</h5>
+                            <div class="mb-3">
+                                <div class="row">
+                                    {% for category in categories %}
+                                    <div class="col-md-4 mb-2">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" name="categories" 
+                                                   value="{{ category.id }}" id="category-{{ category.id }}"
+                                                   {% if company_categories and category.id in company_categories %}checked{% endif %}>
+                                            <label class="form-check-label" for="category-{{ category.id }}">
+                                                {{ category.name }}
+                                            </label>
+                                        </div>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                                <div class="form-text">Select categories that best describe your company. This helps job seekers find you.</div>
+                            </div>
+                        </div>
+                        
+                        <!-- Company Logo -->
+                        <div class="mb-4">
+                            <h5 class="section-title mb-3">Company Logo</h5>
+                            <div class="mb-3">
+                                <label for="logo" class="form-label">Upload Logo</label>
+                                <div class="row align-items-center">
+                                    <div class="col-md-3">
+                                        {% if company and company.logo_path %}
+                                            <img src="{{ url_for('static', filename=company.logo_path) }}" alt="Current Logo" class="img-fluid mb-2">
+                                            <div class="form-text mb-2">Current Logo</div>
+                                        {% else %}
+                                            <div class="placeholder-logo mb-2">
+                                                {{ company.name[0] if company else 'C' }}
+                                            </div>
+                                            <div class="form-text mb-2">No Logo Uploaded</div>
+                                        {% endif %}
+                                    </div>
+                                    <div class="col-md-9">
+                                        {{ form.logo(class="form-control") }}
+                                        {% if form.logo.errors %}
+                                            <div class="invalid-feedback d-block">
+                                                {% for error in form.logo.errors %}
+                                                    {{ error }}
+                                                {% endfor %}
+                                            </div>
+                                        {% endif %}
+                                        <div class="form-text">Upload a square logo (JPG, PNG, or SVG format). Recommended size: 300x300 pixels.</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Company Description -->
+                        <div class="mb-4">
+                            <h5 class="section-title mb-3">Company Description</h5>
+                            <div class="mb-3">
+                                <label for="description" class="form-label">Description <span class="text-danger">*</span></label>
+                                {{ form.description(class="form-control", rows="10", 
+                                    placeholder="Tell job seekers about your company culture, mission, values, and why they should work with you.") }}
+                                {% if form.description.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in form.description.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                                <div class="form-text">HTML formatting is supported. Use headers, bullets, and other formatting to make your company profile stand out.</div>
+                            </div>
+                        </div>
+                        
+                        <hr class="my-4">
+                        
+                        <div class="d-flex justify-content-between">
+                            <a href="{{ url_for('employer_dashboard') }}" class="btn btn-outline-secondary">Cancel</a>
+                            {{ form.submit(class="btn btn-primary") }}
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

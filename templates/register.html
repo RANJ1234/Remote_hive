@@ -1,0 +1,150 @@
+{% extends 'base.html' %}
+
+{% block title %}Register - Remote Hive{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white text-center py-3">
+                    <h3 class="mb-0">Create a Remote Hive Account</h3>
+                </div>
+                <div class="card-body p-4">
+                    <form method="POST" action="{{ url_for('register') }}">
+                        {{ form.hidden_tag() }}
+                        
+                        <div class="mb-3">
+                            <label for="username" class="form-label">Username</label>
+                            {{ form.username(class="form-control", placeholder="Choose a username") }}
+                            {% if form.username.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.username.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="email" class="form-label">Email</label>
+                            {{ form.email(class="form-control", placeholder="Enter your email address") }}
+                            {% if form.email.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.email.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="password" class="form-label">Password</label>
+                            {{ form.password(class="form-control", placeholder="Create a password (at least 8 characters)") }}
+                            {% if form.password.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.password.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="confirm_password" class="form-label">Confirm Password</label>
+                            {{ form.confirm_password(class="form-control", placeholder="Confirm your password") }}
+                            {% if form.confirm_password.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.confirm_password.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="mb-4">
+                            <label class="form-label">Register as</label>
+                            <div class="row">
+                                <div class="col-md-6 mb-2">
+                                    <div class="card user-type-card">
+                                        <div class="card-body">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="radio" name="role" id="jobseeker" value="jobseeker" checked>
+                                                <label class="form-check-label user-type-label" for="jobseeker">
+                                                    <div class="d-flex align-items-center">
+                                                        <i class="fas fa-user-tie fs-4 me-3 text-primary"></i>
+                                                        <div>
+                                                            <h5 class="mb-0">Job Seeker</h5>
+                                                            <p class="mb-0 text-muted">Looking for job opportunities</p>
+                                                        </div>
+                                                    </div>
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6 mb-2">
+                                    <div class="card user-type-card">
+                                        <div class="card-body">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="radio" name="role" id="employer" value="employer">
+                                                <label class="form-check-label user-type-label" for="employer">
+                                                    <div class="d-flex align-items-center">
+                                                        <i class="fas fa-building fs-4 me-3 text-primary"></i>
+                                                        <div>
+                                                            <h5 class="mb-0">Employer</h5>
+                                                            <p class="mb-0 text-muted">Looking to hire talent</p>
+                                                        </div>
+                                                    </div>
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="d-grid">
+                            {{ form.submit(class="btn btn-primary btn-lg") }}
+                        </div>
+                    </form>
+                    
+                    <div class="text-center mt-3">
+                        <p>Already have an account? <a href="{{ url_for('login') }}">Login here</a></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Add 'active' class to selected user type card
+    document.addEventListener('DOMContentLoaded', function() {
+        const userTypeCards = document.querySelectorAll('.user-type-card');
+        const radioInputs = document.querySelectorAll('input[name="role"]');
+        
+        // Set initial state
+        userTypeCards.forEach(card => {
+            const radio = card.querySelector('input[type="radio"]');
+            if (radio.checked) {
+                card.classList.add('border-primary');
+            }
+        });
+        
+        // Add click event to cards
+        userTypeCards.forEach(card => {
+            card.addEventListener('click', function() {
+                // Remove active class from all cards
+                userTypeCards.forEach(c => c.classList.remove('border-primary'));
+                
+                // Add active class to clicked card and check radio
+                card.classList.add('border-primary');
+                card.querySelector('input[type="radio"]').checked = true;
+            });
+        });
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,374 @@
+{% extends 'base.html' %}
+
+{% block title %}Admin Dashboard - Remote Hive{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="row">
+        <!-- Sidebar -->
+        <div class="col-lg-2 col-md-3">
+            <div class="admin-sidebar card shadow-sm mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Admin Panel</h5>
+                </div>
+                <div class="list-group list-group-flush">
+                    <a href="{{ url_for('admin_dashboard') }}" class="list-group-item list-group-item-action active">
+                        <i class="fas fa-tachometer-alt me-2"></i> Dashboard
+                    </a>
+                    <a href="{{ url_for('manage_users') }}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-users me-2"></i> Users
+                    </a>
+                    <a href="{{ url_for('manage_jobs') }}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-briefcase me-2"></i> Jobs
+                    </a>
+                    <a href="{{ url_for('manage_companies') }}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-building me-2"></i> Companies
+                    </a>
+                    <a href="{{ url_for('manage_applications') }}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-file-alt me-2"></i> Applications
+                    </a>
+                    <a href="{{ url_for('manage_categories') }}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-tags me-2"></i> Categories
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Main Content -->
+        <div class="col-lg-10 col-md-9">
+            <h1 class="h3 mb-4">Admin Dashboard</h1>
+            
+            <!-- Stats Cards -->
+            <div class="row mb-4">
+                <div class="col-xl-3 col-md-6 mb-4">
+                    <div class="card border-left-primary shadow-sm h-100 py-2">
+                        <div class="card-body">
+                            <div class="row align-items-center">
+                                <div class="col mr-2">
+                                    <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                        Total Users</div>
+                                    <div class="h5 mb-0 font-weight-bold text-gray-800">{{ total_users }}</div>
+                                </div>
+                                <div class="col-auto">
+                                    <i class="fas fa-users fa-2x text-gray-300"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-xl-3 col-md-6 mb-4">
+                    <div class="card border-left-success shadow-sm h-100 py-2">
+                        <div class="card-body">
+                            <div class="row align-items-center">
+                                <div class="col mr-2">
+                                    <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                        Total Jobs</div>
+                                    <div class="h5 mb-0 font-weight-bold text-gray-800">{{ total_jobs }}</div>
+                                </div>
+                                <div class="col-auto">
+                                    <i class="fas fa-briefcase fa-2x text-gray-300"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-xl-3 col-md-6 mb-4">
+                    <div class="card border-left-info shadow-sm h-100 py-2">
+                        <div class="card-body">
+                            <div class="row align-items-center">
+                                <div class="col mr-2">
+                                    <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                        Total Companies</div>
+                                    <div class="h5 mb-0 font-weight-bold text-gray-800">{{ total_companies }}</div>
+                                </div>
+                                <div class="col-auto">
+                                    <i class="fas fa-building fa-2x text-gray-300"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-xl-3 col-md-6 mb-4">
+                    <div class="card border-left-warning shadow-sm h-100 py-2">
+                        <div class="card-body">
+                            <div class="row align-items-center">
+                                <div class="col mr-2">
+                                    <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                                        Total Applications</div>
+                                    <div class="h5 mb-0 font-weight-bold text-gray-800">{{ total_applications }}</div>
+                                </div>
+                                <div class="col-auto">
+                                    <i class="fas fa-file-alt fa-2x text-gray-300"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Charts Row -->
+            <div class="row mb-4">
+                <div class="col-lg-6 mb-4">
+                    <div class="card shadow-sm">
+                        <div class="card-header bg-light py-3">
+                            <h6 class="m-0 font-weight-bold">Jobs Statistics</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="row align-items-center mb-4">
+                                <div class="col">
+                                    <h4 class="small font-weight-bold">Active Jobs <span class="float-end">{{ active_jobs }} / {{ total_jobs }}</span></h4>
+                                    <div class="progress">
+                                        <div class="progress-bar bg-success" role="progressbar" style="width: {{ (active_jobs / total_jobs * 100) if total_jobs else 0 }}%" aria-valuenow="{{ active_jobs }}" aria-valuemin="0" aria-valuemax="{{ total_jobs }}"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row align-items-center">
+                                <div class="col">
+                                    <h4 class="small font-weight-bold">Remote Jobs <span class="float-end">{{ remote_jobs }} / {{ total_jobs }}</span></h4>
+                                    <div class="progress">
+                                        <div class="progress-bar bg-info" role="progressbar" style="width: {{ (remote_jobs / total_jobs * 100) if total_jobs else 0 }}%" aria-valuenow="{{ remote_jobs }}" aria-valuemin="0" aria-valuemax="{{ total_jobs }}"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="mt-4">
+                                <canvas id="jobTypesChart" height="200"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-lg-6 mb-4">
+                    <div class="card shadow-sm">
+                        <div class="card-header bg-light py-3">
+                            <h6 class="m-0 font-weight-bold">Application Status</h6>
+                        </div>
+                        <div class="card-body">
+                            <canvas id="applicationStatusChart" height="260"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="row">
+                <!-- Recent Jobs Table -->
+                <div class="col-lg-6 mb-4">
+                    <div class="card shadow-sm">
+                        <div class="card-header bg-light py-3 d-flex justify-content-between align-items-center">
+                            <h6 class="m-0 font-weight-bold">Recent Jobs</h6>
+                            <a href="{{ url_for('manage_jobs') }}" class="btn btn-sm btn-primary">View All</a>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-bordered table-hover">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>Title</th>
+                                            <th>Company</th>
+                                            <th>Status</th>
+                                            <th>Posted</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for job in recent_jobs %}
+                                            <tr>
+                                                <td>
+                                                    <a href="{{ url_for('job_details', job_id=job.id) }}">{{ job.title }}</a>
+                                                </td>
+                                                <td>{{ job.company.name }}</td>
+                                                <td>
+                                                    <span class="badge bg-{{ 'success' if job.is_active else 'secondary' }}">
+                                                        {{ 'Active' if job.is_active else 'Inactive' }}
+                                                    </span>
+                                                </td>
+                                                <td>{{ format_date(job.posted_date) }}</td>
+                                            </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Recent Users Table -->
+                <div class="col-lg-6 mb-4">
+                    <div class="card shadow-sm">
+                        <div class="card-header bg-light py-3 d-flex justify-content-between align-items-center">
+                            <h6 class="m-0 font-weight-bold">Recent Users</h6>
+                            <a href="{{ url_for('manage_users') }}" class="btn btn-sm btn-primary">View All</a>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-bordered table-hover">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>Username</th>
+                                            <th>Email</th>
+                                            <th>Role</th>
+                                            <th>Joined</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for user in recent_users %}
+                                            <tr>
+                                                <td>{{ user.username }}</td>
+                                                <td>{{ user.email }}</td>
+                                                <td>
+                                                    <span class="badge bg-{{ 'danger' if user.role == 'admin' else ('primary' if user.role == 'employer' else 'success') }}">
+                                                        {{ user.role|capitalize }}
+                                                    </span>
+                                                </td>
+                                                <td>{{ format_date(user.created_at) }}</td>
+                                            </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Top Companies -->
+            <div class="row mb-4">
+                <div class="col-12">
+                    <div class="card shadow-sm">
+                        <div class="card-header bg-light py-3">
+                            <h6 class="m-0 font-weight-bold">Top Companies by Job Count</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-bordered table-hover">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>Company</th>
+                                            <th>Industry</th>
+                                            <th>Type</th>
+                                            <th>Jobs Count</th>
+                                            <th>Featured</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for company, job_count in top_companies_by_jobs %}
+                                            <tr>
+                                                <td>
+                                                    <a href="{{ url_for('company_details', company_id=company.id) }}">{{ company.name }}</a>
+                                                </td>
+                                                <td>{{ company.industry }}</td>
+                                                <td>{{ company.company_type }}</td>
+                                                <td>{{ job_count }}</td>
+                                                <td>
+                                                    <span class="badge bg-{{ 'warning' if company.is_featured else 'light text-dark' }}">
+                                                        {{ 'Featured' if company.is_featured else 'Regular' }}
+                                                    </span>
+                                                </td>
+                                            </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.1/dist/chart.min.js"></script>
+<script src="{{ url_for('static', filename='js/admin.js') }}"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Job Types Chart
+    const jobTypesCtx = document.getElementById('jobTypesChart').getContext('2d');
+    const jobTypesChart = new Chart(jobTypesCtx, {
+        type: 'doughnut',
+        data: {
+            labels: ['Full-time', 'Part-time', 'Contract', 'Internship', 'Freelance'],
+            datasets: [{
+                data: [65, 15, 10, 5, 5], // Sample data - in a real app, this would come from the backend
+                backgroundColor: [
+                    'rgba(78, 115, 223, 0.8)',
+                    'rgba(28, 200, 138, 0.8)',
+                    'rgba(54, 185, 204, 0.8)',
+                    'rgba(246, 194, 62, 0.8)',
+                    'rgba(231, 74, 59, 0.8)'
+                ],
+                hoverBackgroundColor: [
+                    'rgba(78, 115, 223, 1)',
+                    'rgba(28, 200, 138, 1)',
+                    'rgba(54, 185, 204, 1)',
+                    'rgba(246, 194, 62, 1)',
+                    'rgba(231, 74, 59, 1)'
+                ],
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom'
+                },
+                title: {
+                    display: true,
+                    text: 'Job Types Distribution'
+                }
+            }
+        }
+    });
+    
+    // Application Status Chart
+    const applicationStatusCtx = document.getElementById('applicationStatusChart').getContext('2d');
+    const applicationStatusChart = new Chart(applicationStatusCtx, {
+        type: 'bar',
+        data: {
+            labels: ['Applied', 'Reviewed', 'Shortlisted', 'Rejected', 'Hired'],
+            datasets: [{
+                label: 'Number of Applications',
+                data: [120, 80, 40, 30, 20], // Sample data - in a real app, this would come from the backend
+                backgroundColor: [
+                    'rgba(78, 115, 223, 0.8)',
+                    'rgba(54, 185, 204, 0.8)',
+                    'rgba(28, 200, 138, 0.8)',
+                    'rgba(231, 74, 59, 0.8)',
+                    'rgba(246, 194, 62, 0.8)'
+                ],
+                borderColor: [
+                    'rgba(78, 115, 223, 1)',
+                    'rgba(54, 185, 204, 1)',
+                    'rgba(28, 200, 138, 1)',
+                    'rgba(231, 74, 59, 1)',
+                    'rgba(246, 194, 62, 1)'
+                ],
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            },
+            plugins: {
+                legend: {
+                    display: false
+                },
+                title: {
+                    display: true,
+                    text: 'Applications by Status'
+                }
+            }
+        }
+    });
+});
+</script>
+{% endblock %}
