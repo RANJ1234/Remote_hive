@@ -1,0 +1,220 @@
+{% extends 'base.html' %}
+
+{% block title %}Job Scraper - Remote Hive Admin{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="row">
+        <!-- Sidebar -->
+        <div class="col-lg-2 col-md-3">
+            <div class="admin-sidebar card shadow-sm mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Admin Panel</h5>
+                </div>
+                <div class="list-group list-group-flush">
+                    <a href="{{ url_for('admin_dashboard') }}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-tachometer-alt me-2"></i> Dashboard
+                    </a>
+                    <a href="{{ url_for('analytics_dashboard') }}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-chart-line me-2"></i> Analytics
+                    </a>
+                    <a href="{{ url_for('job_scraper') }}" class="list-group-item list-group-item-action active">
+                        <i class="fas fa-spider me-2"></i> Job Scraper
+                    </a>
+                    <a href="{{ url_for('manage_users') }}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-users me-2"></i> Users
+                    </a>
+                    <a href="{{ url_for('manage_jobs') }}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-briefcase me-2"></i> Jobs
+                    </a>
+                    <a href="{{ url_for('manage_companies') }}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-building me-2"></i> Companies
+                    </a>
+                    <a href="{{ url_for('manage_applications') }}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-file-alt me-2"></i> Applications
+                    </a>
+                    <a href="{{ url_for('manage_categories') }}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-tags me-2"></i> Categories
+                    </a>
+                    <a href="{{ url_for('google_analytics_setup') }}" class="list-group-item list-group-item-action">
+                        <i class="fab fa-google me-2"></i> Google Analytics
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Main Content -->
+        <div class="col-lg-10 col-md-9">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1 class="h3 mb-0">Job Scraper</h1>
+            </div>
+            
+            <div class="row mb-4">
+                <div class="col-lg-8">
+                    <div class="card shadow-sm">
+                        <div class="card-header py-3 bg-light">
+                            <h6 class="m-0 font-weight-bold">Scrape Jobs from URL</h6>
+                        </div>
+                        <div class="card-body">
+                            <form action="{{ url_for('job_scraper') }}" method="post">
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <label for="source_url" class="form-label">Job Source URL</label>
+                                        <input type="url" class="form-control" id="source_url" name="source_url" 
+                                              placeholder="https://example.com/jobs/" required>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label for="source_site" class="form-label">Source Website</label>
+                                        <select class="form-select" id="source_site" name="source_site" required>
+                                            <option value="">Select site type</option>
+                                            <option value="indeed">Indeed</option>
+                                            <option value="linkedin">LinkedIn</option>
+                                            <option value="glassdoor">Glassdoor</option>
+                                            <option value="monster">Monster</option>
+                                            <option value="other">Other</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                
+                                <div class="row g-3 mt-2">
+                                    <div class="col-md-6">
+                                        <label for="company_id" class="form-label">Assign to Company</label>
+                                        <select class="form-select" id="company_id" name="company_id" required>
+                                            <option value="">Select company</option>
+                                            {% for company in companies %}
+                                                <option value="{{ company.id }}">{{ company.name }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label for="job_type" class="form-label">Job Type</label>
+                                        <select class="form-select" id="job_type" name="job_type" required>
+                                            <option value="">Select job type</option>
+                                            <option value="Full-time">Full-time</option>
+                                            <option value="Part-time">Part-time</option>
+                                            <option value="Contract">Contract</option>
+                                            <option value="Internship">Internship</option>
+                                            <option value="Freelance">Freelance</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                
+                                <div class="form-check mt-3 mb-3">
+                                    <input class="form-check-input" type="checkbox" id="is_remote" name="is_remote">
+                                    <label class="form-check-label" for="is_remote">
+                                        Remote Job
+                                    </label>
+                                </div>
+                                
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-download me-2"></i>Scrape Jobs
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                    
+                    {% if scraped_jobs %}
+                    <div class="card shadow-sm mt-4">
+                        <div class="card-header py-3 bg-light">
+                            <h6 class="m-0 font-weight-bold">Scraped Jobs ({{ scraped_jobs|length }})</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-bordered table-hover">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>Title</th>
+                                            <th>Company</th>
+                                            <th>Type</th>
+                                            <th>Remote</th>
+                                            <th>Source</th>
+                                            <th>Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for job in scraped_jobs %}
+                                        <tr>
+                                            <td>{{ job.title }}</td>
+                                            <td>{{ job.company_name }}</td>
+                                            <td>{{ job.job_type }}</td>
+                                            <td>{{ 'Yes' if job.is_remote else 'No' }}</td>
+                                            <td>{{ job.source }}</td>
+                                            <td>
+                                                {% if job.status == 'new' %}
+                                                <span class="badge bg-success">New</span>
+                                                {% elif job.status == 'exists' %}
+                                                <span class="badge bg-warning">Exists</span>
+                                                {% elif job.status == 'imported' %}
+                                                <span class="badge bg-info">Imported</span>
+                                                {% endif %}
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                                
+                                <form action="{{ url_for('import_scraped_jobs') }}" method="post" class="mt-3">
+                                    <input type="hidden" name="job_data" value="{{ job_data }}">
+                                    <button type="submit" class="btn btn-success">
+                                        <i class="fas fa-file-import me-2"></i>Import All Jobs
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+                
+                <div class="col-lg-4">
+                    <div class="card shadow-sm">
+                        <div class="card-header py-3 bg-light">
+                            <h6 class="m-0 font-weight-bold">Job Scraper Instructions</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="alert alert-info">
+                                <h5><i class="fas fa-info-circle me-2"></i>How to use the job scraper</h5>
+                                <ol class="mb-0">
+                                    <li>Enter a URL from a job listing site</li>
+                                    <li>Select the source website type</li>
+                                    <li>Choose which company to assign these jobs to</li>
+                                    <li>Specify the job type and if it's remote</li>
+                                    <li>Click "Scrape Jobs" to retrieve job listings</li>
+                                    <li>Review the scraped jobs</li>
+                                    <li>Click "Import All Jobs" to add them to the database</li>
+                                </ol>
+                            </div>
+                            
+                            <div class="alert alert-warning mt-3">
+                                <h5><i class="fas fa-exclamation-triangle me-2"></i>Important Notes</h5>
+                                <ul class="mb-0">
+                                    <li>Always respect the terms of service of the websites you scrape from</li>
+                                    <li>Some websites may block scraping attempts</li>
+                                    <li>Review job details before importing to ensure quality</li>
+                                    <li>Duplicate jobs won't be imported (based on title + company)</li>
+                                </ul>
+                            </div>
+                            
+                            <div class="mt-3">
+                                <h6>Recently Imported Jobs</h6>
+                                <ul class="list-group">
+                                    {% for job in recent_imported_jobs %}
+                                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <a href="{{ url_for('job_details', job_id=job.id) }}">{{ job.title }}</a>
+                                            <div class="text-muted small">{{ job.company.name }}</div>
+                                        </div>
+                                        <span class="badge bg-secondary rounded-pill">{{ format_date(job.posted_date) }}</span>
+                                    </li>
+                                    {% else %}
+                                    <li class="list-group-item text-muted">No recently imported jobs</li>
+                                    {% endfor %}
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

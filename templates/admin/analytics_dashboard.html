@@ -1,0 +1,716 @@
+{% extends 'base.html' %}
+
+{% block title %}Analytics Dashboard - Remote Hive Admin{% endblock %}
+
+{% block styles %}
+<style>
+    .analytics-card {
+        transition: all 0.3s ease;
+    }
+    .analytics-card:hover {
+        transform: translateY(-5px);
+    }
+    .metric-card {
+        border-radius: 15px;
+        border: none;
+        overflow: hidden;
+    }
+    .metric-icon {
+        width: 48px;
+        height: 48px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 12px;
+        font-size: 1.4rem;
+    }
+    .map-container {
+        height: 400px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="row">
+        <!-- Sidebar -->
+        <div class="col-lg-2 col-md-3">
+            <div class="admin-sidebar card shadow-sm mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Admin Panel</h5>
+                </div>
+                <div class="list-group list-group-flush">
+                    <a href="{{ url_for('admin_dashboard') }}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-tachometer-alt me-2"></i> Dashboard
+                    </a>
+                    <a href="{{ url_for('analytics_dashboard') }}" class="list-group-item list-group-item-action active">
+                        <i class="fas fa-chart-line me-2"></i> Analytics
+                    </a>
+                    <a href="{{ url_for('job_scraper') }}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-spider me-2"></i> Job Scraper
+                    </a>
+                    <a href="{{ url_for('manage_users') }}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-users me-2"></i> Users
+                    </a>
+                    <a href="{{ url_for('manage_jobs') }}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-briefcase me-2"></i> Jobs
+                    </a>
+                    <a href="{{ url_for('manage_companies') }}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-building me-2"></i> Companies
+                    </a>
+                    <a href="{{ url_for('manage_applications') }}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-file-alt me-2"></i> Applications
+                    </a>
+                    <a href="{{ url_for('manage_categories') }}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-tags me-2"></i> Categories
+                    </a>
+                    <a href="{{ url_for('google_analytics_setup') }}" class="list-group-item list-group-item-action">
+                        <i class="fab fa-google me-2"></i> Google Analytics
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Main Content -->
+        <div class="col-lg-10 col-md-9">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1 class="h3 mb-0">Analytics Dashboard</h1>
+                <div class="btn-group">
+                    <button type="button" class="btn btn-outline-primary" id="time-week">Last Week</button>
+                    <button type="button" class="btn btn-outline-primary active" id="time-month">Last Month</button>
+                    <button type="button" class="btn btn-outline-primary" id="time-year">Last Year</button>
+                </div>
+            </div>
+            
+            <!-- Key Metrics -->
+            <div class="row mb-4">
+                <div class="col-xl-3 col-md-6 mb-4">
+                    <div class="metric-card card shadow">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <div class="text-xs text-uppercase mb-1 text-muted">Live Visitors</div>
+                                    <div class="h3 mb-0 font-weight-bold">{{ live_visitors }}</div>
+                                    <div class="text-success mt-2">
+                                        <small>
+                                            <i class="fas fa-arrow-up me-1"></i>
+                                            {{ live_visitors_growth }}% vs. last period
+                                        </small>
+                                    </div>
+                                </div>
+                                <div class="metric-icon bg-primary-soft">
+                                    <i class="fas fa-user-clock text-primary"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-xl-3 col-md-6 mb-4">
+                    <div class="metric-card card shadow">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <div class="text-xs text-uppercase mb-1 text-muted">Total Visitors</div>
+                                    <div class="h3 mb-0 font-weight-bold">{{ total_visitors }}</div>
+                                    <div class="text-success mt-2">
+                                        <small>
+                                            <i class="fas fa-arrow-up me-1"></i>
+                                            {{ total_visitors_growth }}% vs. last period
+                                        </small>
+                                    </div>
+                                </div>
+                                <div class="metric-icon bg-success-soft">
+                                    <i class="fas fa-users text-success"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-xl-3 col-md-6 mb-4">
+                    <div class="metric-card card shadow">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <div class="text-xs text-uppercase mb-1 text-muted">Active Employers</div>
+                                    <div class="h3 mb-0 font-weight-bold">{{ active_employers }}</div>
+                                    <div class="text-success mt-2">
+                                        <small>
+                                            <i class="fas fa-arrow-up me-1"></i>
+                                            {{ employers_growth }}% vs. last period
+                                        </small>
+                                    </div>
+                                </div>
+                                <div class="metric-icon bg-warning-soft">
+                                    <i class="fas fa-building text-warning"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-xl-3 col-md-6 mb-4">
+                    <div class="metric-card card shadow">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <div class="text-xs text-uppercase mb-1 text-muted">Premium Subscribers</div>
+                                    <div class="h3 mb-0 font-weight-bold">{{ premium_subscribers }}</div>
+                                    <div class="text-success mt-2">
+                                        <small>
+                                            <i class="fas fa-arrow-up me-1"></i>
+                                            {{ subscribers_growth }}% vs. last period
+                                        </small>
+                                    </div>
+                                </div>
+                                <div class="metric-icon bg-info-soft">
+                                    <i class="fas fa-star text-info"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Charts Row -->
+            <div class="row mb-4">
+                <div class="col-lg-8 mb-4">
+                    <div class="card shadow">
+                        <div class="card-header py-3 bg-light d-flex justify-content-between align-items-center">
+                            <h6 class="m-0 font-weight-bold">User Activity Over Time</h6>
+                            <div class="btn-group btn-group-sm">
+                                <button type="button" class="btn btn-outline-secondary active" id="visitors-view">Visitors</button>
+                                <button type="button" class="btn btn-outline-secondary" id="signups-view">Sign-ups</button>
+                                <button type="button" class="btn btn-outline-secondary" id="applications-view">Applications</button>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <canvas id="activityChart" height="300"></canvas>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-lg-4 mb-4">
+                    <div class="card shadow">
+                        <div class="card-header py-3 bg-light">
+                            <h6 class="m-0 font-weight-bold">User Types</h6>
+                        </div>
+                        <div class="card-body">
+                            <canvas id="userTypesChart" height="260"></canvas>
+                            
+                            <div class="mt-4">
+                                <div class="d-flex justify-content-between mb-1">
+                                    <span>Job Seekers</span>
+                                    <span class="fw-bold">{{ jobseeker_percentage }}%</span>
+                                </div>
+                                <div class="progress mb-3" style="height: 6px;">
+                                    <div class="progress-bar bg-primary" role="progressbar" style="width: {{ jobseeker_percentage }}%" aria-valuenow="{{ jobseeker_percentage }}" aria-valuemin="0" aria-valuemax="100"></div>
+                                </div>
+                                
+                                <div class="d-flex justify-content-between mb-1">
+                                    <span>Employers</span>
+                                    <span class="fw-bold">{{ employer_percentage }}%</span>
+                                </div>
+                                <div class="progress mb-3" style="height: 6px;">
+                                    <div class="progress-bar bg-success" role="progressbar" style="width: {{ employer_percentage }}%" aria-valuenow="{{ employer_percentage }}" aria-valuemin="0" aria-valuemax="100"></div>
+                                </div>
+                                
+                                <div class="d-flex justify-content-between mb-1">
+                                    <span>Admins</span>
+                                    <span class="fw-bold">{{ admin_percentage }}%</span>
+                                </div>
+                                <div class="progress" style="height: 6px;">
+                                    <div class="progress-bar bg-danger" role="progressbar" style="width: {{ admin_percentage }}%" aria-valuenow="{{ admin_percentage }}" aria-valuemin="0" aria-valuemax="100"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Geographic Data Row -->
+            <div class="row mb-4">
+                <div class="col-12">
+                    <div class="card shadow">
+                        <div class="card-header py-3 bg-light d-flex justify-content-between align-items-center">
+                            <h6 class="m-0 font-weight-bold">Geographic Distribution</h6>
+                            <select class="form-select form-select-sm w-auto" id="map-data-type">
+                                <option value="visitors">Visitors</option>
+                                <option value="employers">Employers</option>
+                                <option value="jobseekers">Job Seekers</option>
+                            </select>
+                        </div>
+                        <div class="card-body">
+                            <div class="map-container">
+                                <div id="worldMap" class="h-100"></div>
+                            </div>
+                            
+                            <div class="row mt-4">
+                                <div class="col-md-6">
+                                    <h6 class="text-muted mb-3">Top Countries</h6>
+                                    <div class="table-responsive">
+                                        <table class="table table-sm">
+                                            <thead>
+                                                <tr>
+                                                    <th>Country</th>
+                                                    <th>Visitors</th>
+                                                    <th>% Total</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {% for country in top_countries %}
+                                                <tr>
+                                                    <td>{{ country.name }}</td>
+                                                    <td>{{ country.visitors }}</td>
+                                                    <td>{{ country.percentage }}%</td>
+                                                </tr>
+                                                {% endfor %}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                                
+                                <div class="col-md-6">
+                                    <h6 class="text-muted mb-3">Device & Browser</h6>
+                                    <div class="row">
+                                        <div class="col-6">
+                                            <canvas id="deviceChart" height="200"></canvas>
+                                        </div>
+                                        <div class="col-6">
+                                            <canvas id="browserChart" height="200"></canvas>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- User Engagement Row -->
+            <div class="row">
+                <div class="col-lg-6 mb-4">
+                    <div class="card shadow">
+                        <div class="card-header py-3 bg-light">
+                            <h6 class="m-0 font-weight-bold">Popular Job Categories</h6>
+                        </div>
+                        <div class="card-body">
+                            <canvas id="categoriesChart" height="300"></canvas>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-lg-6 mb-4">
+                    <div class="card shadow">
+                        <div class="card-header py-3 bg-light">
+                            <h6 class="m-0 font-weight-bold">User Engagement Metrics</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6 mb-4">
+                                    <div class="d-flex align-items-center">
+                                        <div class="metric-icon bg-primary-soft me-3">
+                                            <i class="fas fa-clock text-primary"></i>
+                                        </div>
+                                        <div>
+                                            <div class="text-muted mb-1">Avg. Session Duration</div>
+                                            <div class="h5 mb-0">{{ avg_session_duration }}</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6 mb-4">
+                                    <div class="d-flex align-items-center">
+                                        <div class="metric-icon bg-success-soft me-3">
+                                            <i class="fas fa-redo text-success"></i>
+                                        </div>
+                                        <div>
+                                            <div class="text-muted mb-1">Bounce Rate</div>
+                                            <div class="h5 mb-0">{{ bounce_rate }}%</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6 mb-4">
+                                    <div class="d-flex align-items-center">
+                                        <div class="metric-icon bg-info-soft me-3">
+                                            <i class="fas fa-file-alt text-info"></i>
+                                        </div>
+                                        <div>
+                                            <div class="text-muted mb-1">Pages Per Session</div>
+                                            <div class="h5 mb-0">{{ pages_per_session }}</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6 mb-4">
+                                    <div class="d-flex align-items-center">
+                                        <div class="metric-icon bg-warning-soft me-3">
+                                            <i class="fas fa-bullseye text-warning"></i>
+                                        </div>
+                                        <div>
+                                            <div class="text-muted mb-1">Conversion Rate</div>
+                                            <div class="h5 mb-0">{{ conversion_rate }}%</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="mt-3">
+                                <h6 class="text-muted mb-3">Top Referrers</h6>
+                                <div class="table-responsive">
+                                    <table class="table table-sm">
+                                        <thead>
+                                            <tr>
+                                                <th>Source</th>
+                                                <th>Visitors</th>
+                                                <th>Conversion</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for referrer in top_referrers %}
+                                            <tr>
+                                                <td>{{ referrer.source }}</td>
+                                                <td>{{ referrer.visitors }}</td>
+                                                <td>{{ referrer.conversion }}%</td>
+                                            </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/jsvectormap@1.5.3/dist/js/jsvectormap.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jsvectormap@1.5.3/dist/maps/world.js"></script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Sample data for charts - this would be replaced with real data from the backend
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const currentMonth = new Date().getMonth();
+    const lastMonths = months.slice(currentMonth - 11, currentMonth + 1);
+    
+    // Activity chart
+    const activityCtx = document.getElementById('activityChart').getContext('2d');
+    const activityChart = new Chart(activityCtx, {
+        type: 'line',
+        data: {
+            labels: lastMonths,
+            datasets: [{
+                label: 'Visitors',
+                data: {{ visitors_data|safe if visitors_data else '[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]' }},
+                borderColor: 'rgba(74, 108, 247, 1)',
+                backgroundColor: 'rgba(74, 108, 247, 0.1)',
+                tension: 0.4,
+                fill: true
+            }, {
+                label: 'Sign-ups',
+                data: {{ signups_data|safe if signups_data else '[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]' }},
+                borderColor: 'rgba(19, 194, 150, 1)',
+                backgroundColor: 'rgba(19, 194, 150, 0.1)',
+                tension: 0.4,
+                hidden: true,
+                fill: true
+            }, {
+                label: 'Applications',
+                data: {{ applications_data|safe if applications_data else '[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]' }},
+                borderColor: 'rgba(251, 176, 64, 1)',
+                backgroundColor: 'rgba(251, 176, 64, 0.1)',
+                tension: 0.4,
+                hidden: true,
+                fill: true
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    display: false
+                },
+                tooltip: {
+                    mode: 'index',
+                    intersect: false
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    grid: {
+                        color: 'rgba(0, 0, 0, 0.05)'
+                    }
+                },
+                x: {
+                    grid: {
+                        display: false
+                    }
+                }
+            }
+        }
+    });
+    
+    // User Types Chart
+    const userTypesCtx = document.getElementById('userTypesChart').getContext('2d');
+    const userTypesChart = new Chart(userTypesCtx, {
+        type: 'doughnut',
+        data: {
+            labels: ['Job Seekers', 'Employers', 'Admins'],
+            datasets: [{
+                data: [{{ jobseeker_percentage }}, {{ employer_percentage }}, {{ admin_percentage }}],
+                backgroundColor: [
+                    'rgba(74, 108, 247, 0.8)',
+                    'rgba(19, 194, 150, 0.8)',
+                    'rgba(220, 53, 69, 0.8)'
+                ],
+                borderColor: [
+                    'rgba(74, 108, 247, 1)',
+                    'rgba(19, 194, 150, 1)',
+                    'rgba(220, 53, 69, 1)'
+                ],
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    position: 'bottom'
+                }
+            },
+            cutout: '60%'
+        }
+    });
+    
+    // Device Chart
+    const deviceCtx = document.getElementById('deviceChart').getContext('2d');
+    const deviceChart = new Chart(deviceCtx, {
+        type: 'doughnut',
+        data: {
+            labels: ['Desktop', 'Mobile', 'Tablet'],
+            datasets: [{
+                data: {{ device_data|safe if device_data else '[60, 30, 10]' }},
+                backgroundColor: [
+                    'rgba(74, 108, 247, 0.8)',
+                    'rgba(19, 194, 150, 0.8)',
+                    'rgba(58, 186, 244, 0.8)'
+                ],
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: {
+                        boxWidth: 12
+                    }
+                },
+                title: {
+                    display: true,
+                    text: 'Devices'
+                }
+            },
+            cutout: '60%'
+        }
+    });
+    
+    // Browser Chart
+    const browserCtx = document.getElementById('browserChart').getContext('2d');
+    const browserChart = new Chart(browserCtx, {
+        type: 'doughnut',
+        data: {
+            labels: ['Chrome', 'Safari', 'Firefox', 'Edge', 'Other'],
+            datasets: [{
+                data: {{ browser_data|safe if browser_data else '[50, 20, 15, 10, 5]' }},
+                backgroundColor: [
+                    'rgba(74, 108, 247, 0.8)',
+                    'rgba(19, 194, 150, 0.8)',
+                    'rgba(251, 176, 64, 0.8)',
+                    'rgba(58, 186, 244, 0.8)',
+                    'rgba(173, 181, 189, 0.8)'
+                ],
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: {
+                        boxWidth: 12
+                    }
+                },
+                title: {
+                    display: true,
+                    text: 'Browsers'
+                }
+            },
+            cutout: '60%'
+        }
+    });
+    
+    // Categories Chart
+    const categoriesCtx = document.getElementById('categoriesChart').getContext('2d');
+    const categoriesChart = new Chart(categoriesCtx, {
+        type: 'bar',
+        data: {
+            labels: {{ categories_labels|safe if categories_labels else "['Technology', 'Finance', 'Healthcare', 'Education', 'E-commerce', 'Entertainment']" }},
+            datasets: [{
+                label: 'Jobs Posted',
+                data: {{ categories_jobs_data|safe if categories_jobs_data else '[65, 40, 35, 30, 25, 20]' }},
+                backgroundColor: 'rgba(74, 108, 247, 0.8)',
+                borderColor: 'rgba(74, 108, 247, 1)',
+                borderWidth: 1
+            }, {
+                label: 'Applications Received',
+                data: {{ categories_applications_data|safe if categories_applications_data else '[120, 80, 70, 65, 45, 35]' }},
+                backgroundColor: 'rgba(19, 194, 150, 0.8)',
+                borderColor: 'rgba(19, 194, 150, 1)',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    position: 'top'
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    grid: {
+                        color: 'rgba(0, 0, 0, 0.05)'
+                    }
+                },
+                x: {
+                    grid: {
+                        display: false
+                    }
+                }
+            }
+        }
+    });
+    
+    // World Map
+    const worldMap = new jsVectorMap({
+        selector: '#worldMap',
+        map: 'world',
+        zoomButtons: false,
+        regionStyle: {
+            initial: {
+                fill: '#e9ecef',
+                stroke: '#fff',
+                strokeWidth: 0.5,
+            },
+            hover: {
+                fill: '#4a6cf7',
+                fillOpacity: 0.3
+            },
+        },
+        markers: {{ map_markers|safe if map_markers else '[]' }},
+        markerStyle: {
+            initial: {
+                fill: '#4a6cf7',
+                stroke: '#fff',
+                strokeWidth: 1,
+                r: 6
+            },
+            hover: {
+                fill: '#4a6cf7',
+                stroke: '#fff',
+                strokeWidth: 1,
+                r: 8
+            }
+        },
+        series: {
+            regions: [{
+                values: {{ map_data|safe if map_data else '{}' }},
+                scale: ['#c8d6f9', '#3d5de4'],
+                normalizeFunction: 'polynomial'
+            }]
+        },
+        tooltip: {
+            labelRender: function(code) {
+                return document.querySelector('#map-data-type').value.charAt(0).toUpperCase() + 
+                       document.querySelector('#map-data-type').value.slice(1) + ' from ' + code;
+            }
+        }
+    });
+    
+    // Button handlers
+    document.querySelector('#visitors-view').addEventListener('click', function() {
+        document.querySelector('#visitors-view').classList.add('active');
+        document.querySelector('#signups-view').classList.remove('active');
+        document.querySelector('#applications-view').classList.remove('active');
+        
+        activityChart.data.datasets.forEach((dataset, i) => {
+            dataset.hidden = i !== 0;
+        });
+        activityChart.update();
+    });
+    
+    document.querySelector('#signups-view').addEventListener('click', function() {
+        document.querySelector('#visitors-view').classList.remove('active');
+        document.querySelector('#signups-view').classList.add('active');
+        document.querySelector('#applications-view').classList.remove('active');
+        
+        activityChart.data.datasets.forEach((dataset, i) => {
+            dataset.hidden = i !== 1;
+        });
+        activityChart.update();
+    });
+    
+    document.querySelector('#applications-view').addEventListener('click', function() {
+        document.querySelector('#visitors-view').classList.remove('active');
+        document.querySelector('#signups-view').classList.remove('active');
+        document.querySelector('#applications-view').classList.add('active');
+        
+        activityChart.data.datasets.forEach((dataset, i) => {
+            dataset.hidden = i !== 2;
+        });
+        activityChart.update();
+    });
+    
+    // Time period handlers
+    document.querySelector('#time-week').addEventListener('click', function() {
+        document.querySelector('#time-week').classList.add('active');
+        document.querySelector('#time-month').classList.remove('active');
+        document.querySelector('#time-year').classList.remove('active');
+        
+        // Here we would update all charts with weekly data from the backend
+        // For demo purposes, we're not implementing this functionality
+    });
+    
+    document.querySelector('#time-month').addEventListener('click', function() {
+        document.querySelector('#time-week').classList.remove('active');
+        document.querySelector('#time-month').classList.add('active');
+        document.querySelector('#time-year').classList.remove('active');
+        
+        // Here we would update all charts with monthly data from the backend
+    });
+    
+    document.querySelector('#time-year').addEventListener('click', function() {
+        document.querySelector('#time-week').classList.remove('active');
+        document.querySelector('#time-month').classList.remove('active');
+        document.querySelector('#time-year').classList.add('active');
+        
+        // Here we would update all charts with yearly data from the backend
+    });
+    
+    // Map data type handler
+    document.querySelector('#map-data-type').addEventListener('change', function() {
+        // Here we would update the map with different data based on selection
+        // For example: visitors, employers, job seekers distribution
+    });
+});
+</script>
+{% endblock %}
