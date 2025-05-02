@@ -1,0 +1,367 @@
+{% extends 'base.html' %}
+
+{% block title %}Employer Dashboard - Remote Hive{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <!-- Sidebar -->
+        <div class="col-lg-3">
+            <div class="employer-sidebar card shadow-sm mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Employer Dashboard</h5>
+                </div>
+                <div class="list-group list-group-flush">
+                    <a href="{{ url_for('employer_dashboard') }}" class="list-group-item list-group-item-action active">
+                        <i class="fas fa-tachometer-alt me-2"></i> Dashboard
+                    </a>
+                    <a href="{{ url_for('employer_company_profile') }}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-building me-2"></i> Company Profile
+                    </a>
+                    <a href="{{ url_for('employer_jobs') }}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-briefcase me-2"></i> Manage Jobs
+                    </a>
+                    <a href="{{ url_for('employer_post_job') }}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-plus-circle me-2"></i> Post New Job
+                    </a>
+                    <a href="{{ url_for('employer_applications') }}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-file-alt me-2"></i> Applications
+                    </a>
+                </div>
+            </div>
+            
+            <!-- Company Card -->
+            {% if company %}
+            <div class="card shadow-sm mb-4">
+                <div class="card-body text-center">
+                    {% if company.logo_path %}
+                        <img src="{{ url_for('static', filename=company.logo_path) }}" alt="{{ company.name }}" class="company-logo-md mb-3">
+                    {% else %}
+                        <div class="placeholder-logo mb-3">{{ company.name[0] }}</div>
+                    {% endif %}
+                    <h5 class="card-title">{{ company.name }}</h5>
+                    {% if company.rating > 0 %}
+                    <div class="company-rating mb-2">
+                        <span class="rating-stars">
+                            {% for i in range(5) %}
+                                {% if i < company.rating|int %}
+                                    <i class="fas fa-star text-warning"></i>
+                                {% elif i < company.rating|round(0, 'ceil') %}
+                                    <i class="fas fa-star-half-alt text-warning"></i>
+                                {% else %}
+                                    <i class="far fa-star text-warning"></i>
+                                {% endif %}
+                            {% endfor %}
+                        </span>
+                        <span class="rating-text">{{ company.rating|round(1) }} 
+                            {% if company.review_count > 0 %}
+                            ({{ company.review_count }} reviews)
+                            {% endif %}
+                        </span>
+                    </div>
+                    {% endif %}
+                    <p class="text-muted">
+                        <i class="fas fa-industry me-1"></i> {{ company.industry or 'Industry not set' }}
+                    </p>
+                    <a href="{{ url_for('company_details', company_id=company.id) }}" class="btn btn-outline-primary btn-sm" target="_blank">
+                        <i class="fas fa-external-link-alt me-1"></i> View Public Profile
+                    </a>
+                </div>
+            </div>
+            {% else %}
+            <div class="card shadow-sm mb-4">
+                <div class="card-body">
+                    <div class="text-center py-4">
+                        <i class="fas fa-building fa-3x text-muted mb-3"></i>
+                        <h5>Company Profile Not Set</h5>
+                        <p class="text-muted mb-3">Create your company profile to start posting jobs.</p>
+                        <a href="{{ url_for('employer_company_profile') }}" class="btn btn-primary">
+                            <i class="fas fa-plus-circle me-1"></i> Create Company Profile
+                        </a>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+        
+        <!-- Main Content -->
+        <div class="col-lg-9">
+            {% if company %}
+            <!-- Stats Cards -->
+            <div class="row mb-4">
+                <div class="col-md-4 mb-4">
+                    <div class="card border-left-primary shadow-sm h-100 py-2">
+                        <div class="card-body">
+                            <div class="row align-items-center">
+                                <div class="col mr-2">
+                                    <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                        Total Jobs</div>
+                                    <div class="h5 mb-0 font-weight-bold text-gray-800">{{ total_jobs }}</div>
+                                </div>
+                                <div class="col-auto">
+                                    <i class="fas fa-briefcase fa-2x text-gray-300"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-4 mb-4">
+                    <div class="card border-left-success shadow-sm h-100 py-2">
+                        <div class="card-body">
+                            <div class="row align-items-center">
+                                <div class="col mr-2">
+                                    <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                        Active Jobs</div>
+                                    <div class="h5 mb-0 font-weight-bold text-gray-800">{{ active_jobs }}</div>
+                                </div>
+                                <div class="col-auto">
+                                    <i class="fas fa-check-circle fa-2x text-gray-300"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-4 mb-4">
+                    <div class="card border-left-info shadow-sm h-100 py-2">
+                        <div class="card-body">
+                            <div class="row align-items-center">
+                                <div class="col mr-2">
+                                    <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                        Total Applications</div>
+                                    <div class="h5 mb-0 font-weight-bold text-gray-800">{{ total_applications }}</div>
+                                </div>
+                                <div class="col-auto">
+                                    <i class="fas fa-file-alt fa-2x text-gray-300"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Application Chart -->
+            <div class="row mb-4">
+                <div class="col-12">
+                    <div class="card shadow-sm">
+                        <div class="card-header bg-light py-3">
+                            <h6 class="m-0 font-weight-bold">Application Status Overview</h6>
+                        </div>
+                        <div class="card-body">
+                            <canvas id="applicationStatusChart" height="200"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Recent Applications -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-light py-3 d-flex justify-content-between align-items-center">
+                    <h6 class="m-0 font-weight-bold">Recent Applications</h6>
+                    <a href="{{ url_for('employer_applications') }}" class="btn btn-sm btn-primary">View All</a>
+                </div>
+                <div class="card-body">
+                    {% if recent_applications %}
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-hover">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Applicant</th>
+                                    <th>Job Title</th>
+                                    <th>Applied Date</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for application, job in recent_applications %}
+                                <tr>
+                                    <td>{{ application.applicant.username }}</td>
+                                    <td>
+                                        <a href="{{ url_for('job_details', job_id=job.id) }}" target="_blank">{{ job.title }}</a>
+                                    </td>
+                                    <td>{{ time_since(application.applied_date) }}</td>
+                                    <td>
+                                        <span class="badge bg-{{ 'primary' if application.status == 'applied' else 
+                                                        ('info' if application.status == 'reviewed' else 
+                                                        ('success' if application.status == 'shortlisted' else 
+                                                        ('danger' if application.status == 'rejected' else 
+                                                        'warning'))) }}">
+                                            {{ application.status|capitalize }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <a href="{{ url_for('employer_view_application', application_id=application.id) }}" class="btn btn-sm btn-outline-primary">
+                                            <i class="fas fa-eye"></i> View
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-4">
+                        <i class="fas fa-file-alt fa-3x text-muted mb-3"></i>
+                        <h5>No Applications Yet</h5>
+                        <p class="text-muted">You have not received any job applications yet.</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- Quick Actions -->
+            <div class="card shadow-sm">
+                <div class="card-header bg-light py-3">
+                    <h6 class="m-0 font-weight-bold">Quick Actions</h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4 mb-3 mb-md-0">
+                            <a href="{{ url_for('employer_post_job') }}" class="btn btn-primary btn-block w-100 h-100 py-4">
+                                <i class="fas fa-plus-circle fa-2x mb-2"></i>
+                                <div>Post a New Job</div>
+                            </a>
+                        </div>
+                        <div class="col-md-4 mb-3 mb-md-0">
+                            <a href="{{ url_for('employer_company_profile') }}" class="btn btn-outline-primary btn-block w-100 h-100 py-4">
+                                <i class="fas fa-building fa-2x mb-2"></i>
+                                <div>Update Company Profile</div>
+                            </a>
+                        </div>
+                        <div class="col-md-4">
+                            <a href="{{ url_for('employer_applications') }}" class="btn btn-outline-primary btn-block w-100 h-100 py-4">
+                                <i class="fas fa-file-alt fa-2x mb-2"></i>
+                                <div>Review Applications</div>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% else %}
+            <!-- No Company Profile Yet -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-body">
+                    <div class="text-center py-5">
+                        <i class="fas fa-building fa-4x text-muted mb-4"></i>
+                        <h3>Welcome to Remote Hive!</h3>
+                        <p class="lead">Complete your company profile to start hiring top talent.</p>
+                        <div class="mt-4">
+                            <a href="{{ url_for('employer_company_profile') }}" class="btn btn-primary btn-lg">
+                                <i class="fas fa-plus-circle me-2"></i> Create Company Profile
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Getting Started Guide -->
+            <div class="card shadow-sm">
+                <div class="card-header bg-light py-3">
+                    <h6 class="m-0 font-weight-bold">Getting Started Guide</h6>
+                </div>
+                <div class="card-body">
+                    <div class="getting-started-steps">
+                        <div class="step d-flex mb-4">
+                            <div class="step-number bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-3">1</div>
+                            <div class="step-content">
+                                <h5>Create Your Company Profile</h5>
+                                <p>Set up your company details, logo, and description to attract top talent.</p>
+                            </div>
+                        </div>
+                        <div class="step d-flex mb-4">
+                            <div class="step-number bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-3">2</div>
+                            <div class="step-content">
+                                <h5>Post Your First Job</h5>
+                                <p>Create detailed job listings with requirements, responsibilities, and benefits.</p>
+                            </div>
+                        </div>
+                        <div class="step d-flex mb-4">
+                            <div class="step-number bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-3">3</div>
+                            <div class="step-content">
+                                <h5>Review Applications</h5>
+                                <p>Receive applications and manage your hiring pipeline efficiently.</p>
+                            </div>
+                        </div>
+                        <div class="step d-flex">
+                            <div class="step-number bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-3">4</div>
+                            <div class="step-content">
+                                <h5>Hire The Best Talent</h5>
+                                <p>Contact candidates and hire the perfect match for your team.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{% if company %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.1/dist/chart.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Application Status Chart
+    const applicationStatusCtx = document.getElementById('applicationStatusChart').getContext('2d');
+    
+    // Extract data from backend
+    const statusData = {{ stats_data|tojson }};
+    const labels = ['Applied', 'Reviewed', 'Shortlisted', 'Rejected', 'Hired'];
+    const dataValues = [
+        statusData['applied'] || 0,
+        statusData['reviewed'] || 0,
+        statusData['shortlisted'] || 0,
+        statusData['rejected'] || 0,
+        statusData['hired'] || 0
+    ];
+    
+    const applicationStatusChart = new Chart(applicationStatusCtx, {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Number of Applications',
+                data: dataValues,
+                backgroundColor: [
+                    'rgba(78, 115, 223, 0.8)',
+                    'rgba(54, 185, 204, 0.8)',
+                    'rgba(28, 200, 138, 0.8)',
+                    'rgba(231, 74, 59, 0.8)',
+                    'rgba(246, 194, 62, 0.8)'
+                ],
+                borderColor: [
+                    'rgba(78, 115, 223, 1)',
+                    'rgba(54, 185, 204, 1)',
+                    'rgba(28, 200, 138, 1)',
+                    'rgba(231, 74, 59, 1)',
+                    'rgba(246, 194, 62, 1)'
+                ],
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        stepSize: 1
+                    }
+                }
+            },
+            plugins: {
+                legend: {
+                    display: false
+                }
+            }
+        }
+    });
+});
+</script>
+{% endif %}
+{% endblock %}
