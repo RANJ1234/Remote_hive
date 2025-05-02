@@ -675,8 +675,19 @@ def save_google_analytics():
 @admin_required
 def manage_applications():
     page = request.args.get('page', 1, type=int)
-    applications = JobApplication.query.order_by(JobApplication.applied_date.desc()).paginate(page=page, per_page=20)
-    return render_template('admin/manage_applications.html', applications=applications)
+    applications_pagination = JobApplication.query.order_by(JobApplication.applied_date.desc()).paginate(page=page, per_page=20)
+    
+    # Create a list with application data and related entities
+    applications = []
+    for app in applications_pagination.items:
+        job = Job.query.get(app.job_id)
+        user = User.query.get(app.user_id)
+        company = Company.query.get(job.company_id) if job else None
+        applications.append((app, job, user, company))
+    
+    return render_template('admin/manage_applications.html', 
+                          applications=applications,
+                          pagination=applications_pagination)
 
 @app.route('/admin/application/<int:application_id>/status', methods=['POST'])
 @admin_required
