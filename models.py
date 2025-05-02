@@ -9,9 +9,9 @@ job_skills = db.Table('job_skills',
     db.Column('skill_id', db.Integer, db.ForeignKey('skill.id'), primary_key=True)
 )
 
-# Association table for user_skills (linked to jobseeker_profile instead of user)
+# Association table for user_skills (linked to user directly)
 user_skills = db.Table('user_skills',
-    db.Column('profile_id', db.Integer, db.ForeignKey('jobseeker_profile.id'), primary_key=True),
+    db.Column('user_id', db.Integer, db.ForeignKey('user.id'), primary_key=True),
     db.Column('skill_id', db.Integer, db.ForeignKey('skill.id'), primary_key=True)
 )
 
@@ -29,6 +29,7 @@ class User(UserMixin, db.Model):
     profile = db.relationship('JobseekerProfile', backref='user', uselist=False, cascade='all, delete-orphan')
     company = db.relationship('Company', backref='owner', uselist=False, cascade='all, delete-orphan')
     applications = db.relationship('JobApplication', backref='applicant', lazy='dynamic', cascade='all, delete-orphan')
+    skills = db.relationship('Skill', secondary=user_skills, backref=db.backref('users_with_skill', lazy='dynamic'))
     
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
@@ -62,7 +63,6 @@ class JobseekerProfile(db.Model):
     expected_salary = db.Column(db.Integer, nullable=True)
     location = db.Column(db.String(100), nullable=True)
     remote_preference = db.Column(db.String(50), nullable=True)  # 'remote', 'hybrid', 'on-site'
-    skills = db.relationship('Skill', secondary=user_skills, backref=db.backref('users', lazy='dynamic'))
     
     def __repr__(self):
         return f'<JobseekerProfile {self.full_name}>'

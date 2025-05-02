@@ -5,7 +5,7 @@ from flask_login import login_required, current_user
 from werkzeug.utils import secure_filename
 
 from app import app, db
-from models import JobseekerProfile, Job, JobApplication, Company, Skill, user_skills
+from models import JobseekerProfile, Job, JobApplication, Company, Skill, user_skills, job_skills
 from forms import JobseekerProfileForm, JobApplicationForm
 
 # Jobseeker access decorator
@@ -27,10 +27,10 @@ def jobseeker_dashboard():
     # Get applied jobs
     applications = JobApplication.query.filter_by(user_id=current_user.id).order_by(JobApplication.applied_date.desc()).all()
     
-    # Get recommended jobs (based on jobseeker skills if profile exists)
+    # Get recommended jobs (based on user skills if they exist)
     recommended_jobs = []
-    if profile and profile.skills:
-        user_skill_ids = [skill.id for skill in profile.skills]
+    if current_user.skills:
+        user_skill_ids = [skill.id for skill in current_user.skills]
         
         # Get jobs matching user skills, ordered by number of matching skills
         skill_matching_jobs = db.session.query(
@@ -124,16 +124,16 @@ def jobseeker_skills():
     
     if request.method == 'POST':
         # Clear existing skills
-        profile.skills = []
+        current_user.skills = []
         
         # Get selected skill IDs from form
         skill_ids = request.form.getlist('skills')
         
-        # Add skills to profile
+        # Add skills to user
         for skill_id in skill_ids:
             skill = Skill.query.get(skill_id)
             if skill:
-                profile.skills.append(skill)
+                current_user.skills.append(skill)
         
         # Handle new skill creation
         new_skill_name = request.form.get('new_skill', '').strip()
@@ -141,13 +141,13 @@ def jobseeker_skills():
             # Check if skill already exists
             existing_skill = Skill.query.filter(Skill.name.ilike(new_skill_name)).first()
             if existing_skill:
-                if existing_skill not in profile.skills:
-                    profile.skills.append(existing_skill)
+                if existing_skill not in current_user.skills:
+                    current_user.skills.append(existing_skill)
             else:
                 new_skill = Skill(name=new_skill_name)
                 db.session.add(new_skill)
                 db.session.flush()  # Get skill ID
-                profile.skills.append(new_skill)
+                current_user.skills.append(new_skill)
         
         db.session.commit()
         flash('Skills updated successfully!', 'success')
@@ -155,7 +155,7 @@ def jobseeker_skills():
     
     # Get all skills for the form
     all_skills = Skill.query.order_by(Skill.name).all()
-    user_skill_ids = [skill.id for skill in profile.skills]
+    user_skill_ids = [skill.id for skill in current_user.skills]
     
     return render_template('jobseeker/skills.html', 
                            profile=profile, 
