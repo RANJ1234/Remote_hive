@@ -15,6 +15,12 @@
                     <a href="{{ url_for('admin_dashboard') }}" class="list-group-item list-group-item-action active">
                         <i class="fas fa-tachometer-alt me-2"></i> Dashboard
                     </a>
+                    <a href="{{ url_for('analytics_dashboard') }}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-chart-line me-2"></i> Analytics
+                    </a>
+                    <a href="{{ url_for('job_scraper') }}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-spider me-2"></i> Job Scraper
+                    </a>
                     <a href="{{ url_for('manage_users') }}" class="list-group-item list-group-item-action">
                         <i class="fas fa-users me-2"></i> Users
                     </a>
@@ -29,6 +35,9 @@
                     </a>
                     <a href="{{ url_for('manage_categories') }}" class="list-group-item list-group-item-action">
                         <i class="fas fa-tags me-2"></i> Categories
+                    </a>
+                    <a href="{{ url_for('google_analytics_setup') }}" class="list-group-item list-group-item-action">
+                        <i class="fab fa-google me-2"></i> Google Analytics
                     </a>
                 </div>
             </div>
