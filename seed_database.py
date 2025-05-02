@@ -202,12 +202,12 @@ def seed_database():
         db.session.add(profile)
         print("Created jobseeker user with profile")
         
-        # Add skills to jobseeker
+        # Add skills to jobseeker (through user since skills are linked to user_id, not profile_id)
         db.session.flush()
         for skill_name in ["Python", "JavaScript", "React", "Django", "Node.js", "PostgreSQL", "Git"]:
             skill = next((s for s in skill_objects if s.name == skill_name), None)
             if skill:
-                profile.skills.append(skill)
+                jobseeker.skills = jobseeker.skills + [skill] if hasattr(jobseeker, 'skills') else [skill]
     
     db.session.commit()
     print("Database seeding completed successfully!")
