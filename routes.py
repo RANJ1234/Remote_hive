@@ -5,7 +5,7 @@ from flask import render_template, redirect, url_for, flash, request, jsonify, a
 from flask_login import login_user, logout_user, login_required, current_user
 from werkzeug.utils import secure_filename
 from app import app, db
-from models import User, Job, Company, JobseekerProfile, JobApplication, CompanyReview, CompanyCategory
+from models import User, Job, Company, JobseekerProfile, JobApplication, CompanyReview, CompanyCategory, CompanyCategoryAssociation
 from forms import LoginForm, RegisterForm, SearchForm, JobApplicationForm, CompanyReviewForm
 
 # Helper functions
