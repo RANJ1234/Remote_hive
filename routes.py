@@ -4,6 +4,7 @@ from datetime import datetime
 from flask import render_template, redirect, url_for, flash, request, jsonify, abort, current_app
 from flask_login import login_user, logout_user, login_required, current_user
 from werkzeug.utils import secure_filename
+from sqlalchemy import func, desc
 from app import app, db
 from models import User, Job, Company, JobseekerProfile, JobApplication, CompanyReview, CompanyCategory, CompanyCategoryAssociation
 from forms import LoginForm, RegisterForm, SearchForm, JobApplicationForm, CompanyReviewForm
@@ -134,6 +135,74 @@ def jobs():
     jobs = Job.query.filter_by(is_active=True).order_by(Job.posted_date.desc()).paginate(page=page, per_page=20)
     search_form = SearchForm()
     return render_template('job_listing.html', jobs=jobs, search_form=search_form)
+
+@app.route('/job-feed')
+def job_feed():
+    """
+    LinkedIn-style job feed with personalized recommendations and advanced filtering.
+    """
+    page = request.args.get('page', 1, type=int)
+    
+    # Get base job query
+    job_query = Job.query.filter_by(is_active=True)
+    
+    # Apply filters from query parameters
+    job_type = request.args.get('job_type')
+    experience = request.args.get('experience')
+    remote = request.args.get('remote')
+    salary_min = request.args.get('salary_min')
+    salary_max = request.args.get('salary_max')
+    
+    if job_type:
+        job_query = job_query.filter(Job.job_type == job_type)
+    
+    if experience:
+        job_query = job_query.filter(Job.experience_required == experience)
+    
+    if remote:
+        job_query = job_query.filter(Job.is_remote == True)
+    
+    if salary_min:
+        job_query = job_query.filter(Job.salary_max >= int(salary_min))
+    
+    if salary_max:
+        job_query = job_query.filter(Job.salary_min <= int(salary_max))
+    
+    # Get featured jobs (limited to 3)
+    featured_jobs = Job.query.filter_by(is_active=True).order_by(func.random()).limit(3).all()
+    
+    # Get companies with most jobs
+    top_companies = db.session.query(
+        Company, func.count(Job.id).label('job_count')
+    ).join(Job).group_by(Company).order_by(desc('job_count')).limit(5).all()
+    
+    # Order by newest first as default
+    sort = request.args.get('sort', 'newest')
+    if sort == 'newest':
+        job_query = job_query.order_by(Job.posted_date.desc())
+    elif sort == 'oldest':
+        job_query = job_query.order_by(Job.posted_date.asc())
+    elif sort == 'salary_high':
+        job_query = job_query.order_by(Job.salary_max.desc())
+    elif sort == 'salary_low':
+        job_query = job_query.order_by(Job.salary_min.asc())
+    
+    # Paginate results
+    jobs = job_query.paginate(page=page, per_page=10)
+    
+    # Get all categories for filter
+    categories = CompanyCategory.query.all()
+    
+    search_form = SearchForm()
+    
+    return render_template(
+        'job_feed.html', 
+        jobs=jobs, 
+        featured_jobs=featured_jobs,
+        top_companies=top_companies,
+        categories=categories,
+        search_form=search_form
+    )
 
 @app.route('/job/<int:job_id>')
 def job_details(job_id):
