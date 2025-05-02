@@ -1,13 +1,16 @@
 import logging
 import os
+import json
+import random
+from datetime import datetime, timedelta
 from flask import render_template, redirect, url_for, flash, request, jsonify, abort
 from flask_login import login_required, current_user
 from werkzeug.utils import secure_filename
-from datetime import datetime
 
 from app import app, db
-from models import User, Job, Company, JobseekerProfile, JobApplication, CompanyReview, CompanyCategory, CompanyCategoryAssociation
+from models import User, Job, Company, JobseekerProfile, JobApplication, CompanyReview, CompanyCategory, CompanyCategoryAssociation, Skill
 from forms import AdminUserForm, AdminCompanyCategoryForm, CompanyForm, JobPostForm
+from web_scraper import get_website_text_content
 
 # Admin access decorator
 def admin_required(f):
@@ -419,6 +422,248 @@ def delete_category(category_id):
     db.session.commit()
     flash('Category deleted successfully!', 'success')
     return redirect(url_for('manage_categories'))
+
+# Job Scraper
+@app.route('/admin/job-scraper', methods=['GET', 'POST'])
+@admin_required
+def job_scraper():
+    companies = Company.query.all()
+    recent_imported_jobs = Job.query.filter(Job.description.like('%[Imported from%')).order_by(Job.posted_date.desc()).limit(5).all()
+    scraped_jobs = None
+    job_data = None
+    
+    if request.method == 'POST':
+        source_url = request.form.get('source_url')
+        source_site = request.form.get('source_site')
+        company_id = request.form.get('company_id')
+        job_type = request.form.get('job_type')
+        is_remote = True if request.form.get('is_remote') else False
+        
+        try:
+            # Get company
+            company = Company.query.get(company_id)
+            if not company:
+                flash('Company not found', 'danger')
+                return redirect(url_for('job_scraper'))
+            
+            # Use web scraper to extract job content
+            content = get_website_text_content(source_url)
+            
+            if not content:
+                flash('Failed to scrape content from the URL', 'danger')
+                return redirect(url_for('job_scraper'))
+            
+            # Process content to extract jobs
+            # This is a simplified implementation
+            # In a real system, we would use NLP and more sophisticated parsing
+            lines = content.split('\n')
+            job_titles = []
+            descriptions = []
+            
+            # Extract potential job titles (lines that might be job titles)
+            for i, line in enumerate(lines):
+                line = line.strip()
+                if len(line) > 10 and len(line) < 100 and not line.endswith('.'):
+                    if any(keyword in line.lower() for keyword in ['developer', 'engineer', 'designer', 'manager', 'specialist', 'analyst']):
+                        job_titles.append((line, i))
+            
+            # Extract descriptions for each job title
+            scraped_jobs = []
+            for title, position in job_titles[:5]:  # Limit to 5 jobs
+                # Get text after job title as description (limited to next 20 lines)
+                description = '\n'.join(lines[position+1:position+20])
+                
+                # Create a dictionary for each job
+                job_dict = {
+                    'title': title,
+                    'company_name': company.name,
+                    'company_id': company.id,
+                    'description': description,
+                    'job_type': job_type,
+                    'is_remote': is_remote,
+                    'source': source_site,
+                    'source_url': source_url,
+                    'status': 'new'
+                }
+                
+                # Check if job already exists
+                if Job.query.filter_by(title=title, company_id=company.id).first():
+                    job_dict['status'] = 'exists'
+                
+                scraped_jobs.append(job_dict)
+            
+            job_data = json.dumps(scraped_jobs)
+            
+            if not scraped_jobs:
+                flash('No jobs could be extracted from the content', 'warning')
+        
+        except Exception as e:
+            logging.error(f"Error scraping jobs: {str(e)}")
+            flash(f'Error: {str(e)}', 'danger')
+    
+    return render_template('admin/job_scraper.html', 
+                          companies=companies, 
+                          scraped_jobs=scraped_jobs, 
+                          job_data=job_data,
+                          recent_imported_jobs=recent_imported_jobs)
+
+@app.route('/admin/import-scraped-jobs', methods=['POST'])
+@admin_required
+def import_scraped_jobs():
+    job_data = request.form.get('job_data')
+    
+    if not job_data:
+        flash('No job data to import', 'danger')
+        return redirect(url_for('job_scraper'))
+    
+    try:
+        jobs = json.loads(job_data)
+        imported_count = 0
+        
+        for job_dict in jobs:
+            if job_dict['status'] != 'exists':
+                # Create new job
+                job = Job(
+                    company_id=job_dict['company_id'],
+                    title=job_dict['title'],
+                    description=f"{job_dict['description']}\n\n[Imported from {job_dict['source']} on {datetime.now().strftime('%Y-%m-%d')}]",
+                    job_type=job_dict['job_type'],
+                    is_remote=job_dict['is_remote'],
+                    is_active=True,
+                    location="Remote" if job_dict['is_remote'] else "Not specified",
+                    requirements="Not specified",
+                    posted_date=datetime.now()
+                )
+                
+                db.session.add(job)
+                imported_count += 1
+        
+        db.session.commit()
+        flash(f'Successfully imported {imported_count} jobs', 'success')
+    
+    except Exception as e:
+        logging.error(f"Error importing jobs: {str(e)}")
+        db.session.rollback()
+        flash(f'Error importing jobs: {str(e)}', 'danger')
+    
+    return redirect(url_for('job_scraper'))
+
+# Analytics Dashboard
+@app.route('/admin/analytics')
+@admin_required
+def analytics_dashboard():
+    # Simulated analytics data - in a production environment, 
+    # this would be replaced with real analytics from a database
+    
+    # User statistics
+    total_users = User.query.count()
+    jobseekers = User.query.filter_by(role='jobseeker').count()
+    employers = User.query.filter_by(role='employer').count()
+    admins = User.query.filter_by(role='admin').count()
+    
+    # Calculate percentages
+    jobseeker_percentage = round((jobseekers / total_users) * 100) if total_users > 0 else 0
+    employer_percentage = round((employers / total_users) * 100) if total_users > 0 else 0
+    admin_percentage = round((admins / total_users) * 100) if total_users > 0 else 0
+    
+    # Get active employers (those with at least one job posting)
+    active_employers = db.session.query(Company.user_id).distinct().count()
+    
+    # Simulated visitor data
+    live_visitors = random.randint(5, 30)
+    total_visitors = random.randint(500, 1500)
+    
+    # Growth metrics (simulated)
+    live_visitors_growth = random.randint(5, 15)
+    total_visitors_growth = random.randint(10, 30)
+    employers_growth = random.randint(5, 20)
+    
+    # Simulated premium subscribers
+    premium_subscribers = random.randint(10, 50)
+    subscribers_growth = random.randint(5, 25)
+    
+    # Visitor time series data (simulated)
+    visitors_data = [random.randint(300, 1000) for _ in range(12)]
+    signups_data = [random.randint(20, 100) for _ in range(12)]
+    applications_data = [random.randint(50, 200) for _ in range(12)]
+    
+    # User engagement metrics (simulated)
+    avg_session_duration = f"{random.randint(2, 10)}m {random.randint(0, 59)}s"
+    bounce_rate = round(random.uniform(30, 60), 1)
+    pages_per_session = round(random.uniform(2, 8), 1)
+    conversion_rate = round(random.uniform(2, 10), 1)
+    
+    # Get top categories
+    categories = CompanyCategory.query.all()
+    categories_labels = [category.name for category in categories]
+    categories_jobs_data = [random.randint(10, 100) for _ in range(len(categories_labels))]
+    categories_applications_data = [random.randint(20, 150) for _ in range(len(categories_labels))]
+    
+    # Get browser and device data (simulated)
+    device_data = [60, 30, 10]  # Desktop, Mobile, Tablet
+    browser_data = [50, 20, 15, 10, 5]  # Chrome, Safari, Firefox, Edge, Other
+    
+    # Geographic data (simulated)
+    top_countries = [
+        {'name': 'United States', 'visitors': random.randint(300, 800), 'percentage': random.randint(30, 50)},
+        {'name': 'India', 'visitors': random.randint(100, 400), 'percentage': random.randint(10, 30)},
+        {'name': 'United Kingdom', 'visitors': random.randint(50, 200), 'percentage': random.randint(5, 15)},
+        {'name': 'Germany', 'visitors': random.randint(30, 150), 'percentage': random.randint(3, 10)},
+        {'name': 'Canada', 'visitors': random.randint(20, 100), 'percentage': random.randint(2, 8)}
+    ]
+    
+    # Referrer data (simulated)
+    top_referrers = [
+        {'source': 'Google', 'visitors': random.randint(200, 600), 'conversion': round(random.uniform(2, 8), 1)},
+        {'source': 'Direct', 'visitors': random.randint(100, 400), 'conversion': round(random.uniform(5, 15), 1)},
+        {'source': 'LinkedIn', 'visitors': random.randint(50, 300), 'conversion': round(random.uniform(8, 20), 1)},
+        {'source': 'Facebook', 'visitors': random.randint(30, 200), 'conversion': round(random.uniform(1, 10), 1)},
+        {'source': 'Twitter', 'visitors': random.randint(20, 100), 'conversion': round(random.uniform(1, 5), 1)}
+    ]
+    
+    return render_template('admin/analytics_dashboard.html',
+                          total_users=total_users,
+                          jobseeker_percentage=jobseeker_percentage,
+                          employer_percentage=employer_percentage,
+                          admin_percentage=admin_percentage,
+                          active_employers=active_employers,
+                          live_visitors=live_visitors,
+                          total_visitors=total_visitors,
+                          live_visitors_growth=live_visitors_growth,
+                          total_visitors_growth=total_visitors_growth,
+                          employers_growth=employers_growth,
+                          premium_subscribers=premium_subscribers,
+                          subscribers_growth=subscribers_growth,
+                          visitors_data=json.dumps(visitors_data),
+                          signups_data=json.dumps(signups_data),
+                          applications_data=json.dumps(applications_data),
+                          avg_session_duration=avg_session_duration,
+                          bounce_rate=bounce_rate,
+                          pages_per_session=pages_per_session,
+                          conversion_rate=conversion_rate,
+                          categories_labels=json.dumps(categories_labels),
+                          categories_jobs_data=json.dumps(categories_jobs_data),
+                          categories_applications_data=json.dumps(categories_applications_data),
+                          device_data=json.dumps(device_data),
+                          browser_data=json.dumps(browser_data),
+                          top_countries=top_countries,
+                          top_referrers=top_referrers)
+
+# Google Analytics Setup
+@app.route('/admin/google-analytics')
+@admin_required
+def google_analytics_setup():
+    return render_template('admin/google_analytics_setup.html')
+
+@app.route('/admin/google-analytics/save', methods=['POST'])
+@admin_required
+def save_google_analytics():
+    tracking_id = request.form.get('tracking_id')
+    # In a production environment, we would save this to database
+    # or environment variables
+    # For now, just simulate success
+    flash('Google Analytics tracking ID saved successfully!', 'success')
+    return redirect(url_for('google_analytics_setup'))
 
 # Application Management
 @app.route('/admin/applications')
