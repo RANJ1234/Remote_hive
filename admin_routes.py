@@ -734,6 +734,8 @@ def save_file(file, folder):
         return os.path.join(folder, filename)
     return None
 
+
+
 # Import/Export Data
 @app.route('/admin/import-export')
 @admin_required
@@ -1018,20 +1020,7 @@ def update_site_content():
         
     return redirect(url_for('manage_site_content'))
 
-# Enhanced Job Scraper with Scheduling
-@app.route('/admin/job-scraper/schedule', methods=['POST'])
-@admin_required
-def schedule_job_scraper():
-    source_url = request.form.get('source_url')
-    source_site = request.form.get('source_site')
-    company_id = request.form.get('company_id')
-    schedule_frequency = request.form.get('schedule_frequency')
-    
-    # In a production implementation, this would save to a database table
-    # and use a task scheduler like Celery to run the job at the specified interval
-    
-    flash(f'Successfully scheduled job scraper to run {schedule_frequency}', 'success')
-    return redirect(url_for('job_scraper'))
+
 
 # Helper function for allowed file types
 def allowed_file(filename, allowed_extensions):
