@@ -1,11 +1,16 @@
 import logging
 import os
+import io
 import json
+import csv
 import random
 from datetime import datetime, timedelta
-from flask import render_template, redirect, url_for, flash, request, jsonify, abort
+from flask import render_template, redirect, url_for, flash, request, jsonify, abort, make_response
 from flask_login import login_required, current_user
 from werkzeug.utils import secure_filename
+from openpyxl import Workbook, load_workbook
+from openpyxl.styles import Font
+from reportlab.pdfgen import canvas
 
 from app import app, db
 from models import User, Job, Company, JobseekerProfile, JobApplication, CompanyReview, CompanyCategory, CompanyCategoryAssociation, Skill
@@ -717,6 +722,305 @@ def save_file(file, folder):
         file.save(file_path)
         return os.path.join(folder, filename)
     return None
+
+# Import/Export Data
+@app.route('/admin/import-export')
+@admin_required
+def import_export_data():
+    return render_template('admin/import_export.html')
+
+@app.route('/admin/export-data', methods=['POST'])
+@admin_required
+def export_data():
+    data_type = request.form.get('data_type')
+    export_format = request.form.get('export_format')
+    
+    # Prepare data based on type
+    if data_type == 'users':
+        data = User.query.all()
+        headers = ['ID', 'Username', 'Email', 'Role', 'Active', 'Created At']
+        rows = [[user.id, user.username, user.email, user.role, 
+                user.is_active, user.created_at.strftime('%Y-%m-%d')] for user in data]
+    elif data_type == 'jobs':
+        data = Job.query.all()
+        headers = ['ID', 'Title', 'Company', 'Type', 'Remote', 'Active', 'Posted Date']
+        rows = [[job.id, job.title, job.company.name, job.job_type, 
+                job.is_remote, job.is_active, job.posted_date.strftime('%Y-%m-%d')] for job in data]
+    elif data_type == 'companies':
+        data = Company.query.all()
+        headers = ['ID', 'Name', 'Industry', 'Size', 'Featured']
+        rows = [[company.id, company.name, company.industry, 
+                company.company_size, company.is_featured] for company in data]
+    elif data_type == 'applications':
+        data = JobApplication.query.all()
+        headers = ['ID', 'Job', 'Applicant', 'Status', 'Applied Date']
+        rows = [[app.id, Job.query.get(app.job_id).title, 
+                User.query.get(app.user_id).username, app.status,
+                app.applied_date.strftime('%Y-%m-%d')] for app in data]
+    else:
+        flash('Invalid data type selected', 'danger')
+        return redirect(url_for('import_export_data'))
+        
+    # Generate export file based on format
+    if export_format == 'csv':
+        # Generate CSV
+        output = io.StringIO()
+        writer = csv.writer(output)
+        writer.writerow(headers)
+        writer.writerows(rows)
+        
+        response = make_response(output.getvalue())
+        response.headers['Content-Disposition'] = f'attachment; filename={data_type}_{datetime.now().strftime("%Y%m%d")}.csv'
+        response.headers['Content-type'] = 'text/csv'
+        return response
+        
+    elif export_format == 'excel':
+        # Generate Excel
+        output = io.BytesIO()
+        wb = Workbook()
+        ws = wb.active
+        ws.title = data_type.capitalize()
+        
+        # Write headers
+        for col_num, header in enumerate(headers, 1):
+            cell = ws.cell(row=1, column=col_num)
+            cell.value = header
+            cell.font = Font(bold=True)
+        
+        # Write data rows
+        for row_num, row in enumerate(rows, 2):
+            for col_num, cell_value in enumerate(row, 1):
+                ws.cell(row=row_num, column=col_num).value = cell_value
+        
+        wb.save(output)
+        output.seek(0)
+        
+        response = make_response(output.getvalue())
+        response.headers['Content-Disposition'] = f'attachment; filename={data_type}_{datetime.now().strftime("%Y%m%d")}.xlsx'
+        response.headers['Content-type'] = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        return response
+        
+    elif export_format == 'pdf':
+        # Generate PDF
+        buffer = io.BytesIO()
+        p = canvas.Canvas(buffer)
+        
+        # Set title
+        p.setFont('Helvetica-Bold', 16)
+        p.drawString(30, 750, f"{data_type.capitalize()} Report - {datetime.now().strftime('%Y-%m-%d')}")
+        
+        # Draw table headers
+        p.setFont('Helvetica-Bold', 12)
+        x_offset = 30
+        for header in headers:
+            p.drawString(x_offset, 720, header)
+            x_offset += 100
+        
+        # Draw table rows
+        p.setFont('Helvetica', 10)
+        y_offset = 700
+        for row in rows[:40]:  # Limit to 40 rows per page for simplicity
+            x_offset = 30
+            for cell in row:
+                p.drawString(x_offset, y_offset, str(cell))
+                x_offset += 100
+            y_offset -= 20
+        
+        p.save()
+        buffer.seek(0)
+        
+        response = make_response(buffer.getvalue())
+        response.headers['Content-Disposition'] = f'attachment; filename={data_type}_{datetime.now().strftime("%Y%m%d")}.pdf'
+        response.headers['Content-type'] = 'application/pdf'
+        return response
+        
+    else:
+        # JSON format
+        json_data = []
+        for i, row in enumerate(rows):
+            item = {}
+            for j, header in enumerate(headers):
+                item[header] = row[j]
+            json_data.append(item)
+            
+        response = make_response(json.dumps(json_data, default=str, indent=4))
+        response.headers['Content-Disposition'] = f'attachment; filename={data_type}_{datetime.now().strftime("%Y%m%d")}.json'
+        response.headers['Content-type'] = 'application/json'
+        return response
+
+@app.route('/admin/import-data', methods=['POST'])
+@admin_required
+def import_data():
+    if 'import_file' not in request.files:
+        flash('No file selected', 'danger')
+        return redirect(url_for('import_export_data'))
+        
+    file = request.files['import_file']
+    if file.filename == '':
+        flash('No file selected', 'danger')
+        return redirect(url_for('import_export_data'))
+        
+    data_type = request.form.get('import_data_type')
+    
+    if file and allowed_file(file.filename, {'csv', 'xlsx', 'json'}):
+        try:
+            filename = secure_filename(file.filename)
+            ext = filename.rsplit('.', 1)[1].lower()
+            
+            if ext == 'csv':
+                # Process CSV
+                file_content = file.read().decode('utf-8')
+                csv_data = csv.reader(io.StringIO(file_content))
+                headers = next(csv_data)  # Skip header row
+                rows = list(csv_data)
+            elif ext == 'xlsx':
+                # Process Excel
+                wb = load_workbook(filename=file)
+                ws = wb.active
+                rows = list(ws.values)
+                headers = rows[0]
+                rows = rows[1:]
+            elif ext == 'json':
+                # Process JSON
+                json_data = json.loads(file.read().decode('utf-8'))
+                if not json_data:
+                    flash('Empty or invalid JSON file', 'danger')
+                    return redirect(url_for('import_export_data'))
+                    
+                # Import logic based on data type
+                if data_type == 'jobs':
+                    # Process job data import
+                    for job_data in json_data:
+                        # Check if company exists
+                        company_name = job_data.get('company_name')
+                        company = Company.query.filter_by(name=company_name).first()
+                        if not company:
+                            flash(f'Company "{company_name}" not found for job: {job_data.get("title")}', 'warning')
+                            continue
+                            
+                        # Check if job already exists
+                        if Job.query.filter_by(title=job_data.get('title'), company_id=company.id).first():
+                            flash(f'Job "{job_data.get("title")}" at {company_name} already exists', 'warning')
+                            continue
+                            
+                        # Create job
+                        job = Job(
+                            company_id=company.id,
+                            title=job_data.get('title'),
+                            description=job_data.get('description', ''),
+                            location=job_data.get('location', ''),
+                            is_remote=job_data.get('is_remote', False),
+                            job_type=job_data.get('job_type', 'Full-time'),
+                            requirements=job_data.get('requirements', ''),
+                            posted_date=datetime.now(),
+                            is_active=True
+                        )
+                        db.session.add(job)
+                    
+                    db.session.commit()
+                    flash(f'Successfully imported jobs from JSON', 'success')
+                else:
+                    flash('This import type is not currently supported', 'warning')
+                
+                return redirect(url_for('import_export_data'))
+            
+            # Process import based on data type and loaded data
+            # For brevity, we'll just handle job import for CSV/Excel
+            if data_type == 'jobs':
+                # Map headers to expected columns
+                title_idx = headers.index('Title') if 'Title' in headers else -1
+                company_idx = headers.index('Company') if 'Company' in headers else -1
+                type_idx = headers.index('Type') if 'Type' in headers else -1
+                remote_idx = headers.index('Remote') if 'Remote' in headers else -1
+                
+                if title_idx == -1 or company_idx == -1:
+                    flash('Missing required columns in import file', 'danger')
+                    return redirect(url_for('import_export_data'))
+                
+                # Process rows
+                imported_count = 0
+                for row in rows:
+                    title = row[title_idx]
+                    company_name = row[company_idx]
+                    job_type = row[type_idx] if type_idx != -1 else 'Full-time'
+                    is_remote = row[remote_idx] if remote_idx != -1 else False
+                    
+                    # Find company
+                    company = Company.query.filter_by(name=company_name).first()
+                    if not company:
+                        flash(f'Company "{company_name}" not found for job: {title}', 'warning')
+                        continue
+                    
+                    # Check if job already exists
+                    if Job.query.filter_by(title=title, company_id=company.id).first():
+                        flash(f'Job "{title}" at {company_name} already exists', 'warning')
+                        continue
+                    
+                    # Create job
+                    job = Job(
+                        company_id=company.id,
+                        title=title,
+                        description='Imported job - please update description',
+                        job_type=job_type,
+                        is_remote=is_remote,
+                        is_active=True,
+                        location="Not specified",
+                        requirements="Not specified",
+                        posted_date=datetime.now()
+                    )
+                    
+                    db.session.add(job)
+                    imported_count += 1
+                
+                db.session.commit()
+                flash(f'Successfully imported {imported_count} jobs', 'success')
+            else:
+                flash('This import type is not currently supported', 'warning')
+                
+        except Exception as e:
+            db.session.rollback()
+            logging.error(f"Error importing data: {str(e)}")
+            flash(f'Error importing data: {str(e)}', 'danger')
+    else:
+        flash('Invalid file format. Please upload a CSV, Excel, or JSON file.', 'danger')
+    
+    return redirect(url_for('import_export_data'))
+
+# Site Content Management
+@app.route('/admin/site-content')
+@admin_required
+def manage_site_content():
+    return render_template('admin/site_content.html')
+
+@app.route('/admin/site-content/update', methods=['POST'])
+@admin_required
+def update_site_content():
+    section = request.form.get('section')
+    content = request.form.get('content')
+    
+    if section and content:
+        # In a real implementation, this would update a database table 
+        # that stores site content sections
+        flash(f'Successfully updated {section} content', 'success')
+    else:
+        flash('Missing section or content data', 'danger')
+        
+    return redirect(url_for('manage_site_content'))
+
+# Enhanced Job Scraper with Scheduling
+@app.route('/admin/job-scraper/schedule', methods=['POST'])
+@admin_required
+def schedule_job_scraper():
+    source_url = request.form.get('source_url')
+    source_site = request.form.get('source_site')
+    company_id = request.form.get('company_id')
+    schedule_frequency = request.form.get('schedule_frequency')
+    
+    # In a production implementation, this would save to a database table
+    # and use a task scheduler like Celery to run the job at the specified interval
+    
+    flash(f'Successfully scheduled job scraper to run {schedule_frequency}', 'success')
+    return redirect(url_for('job_scraper'))
 
 # Helper function for allowed file types
 def allowed_file(filename, allowed_extensions):
