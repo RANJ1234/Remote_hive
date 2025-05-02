@@ -1,0 +1,606 @@
+{% extends 'base.html' %}
+
+{% block title %}Site Content Management - Remote Hive Admin{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="row">
+        <!-- Sidebar -->
+        <div class="col-lg-2 col-md-3">
+            <div class="admin-sidebar card shadow-sm mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Admin Panel</h5>
+                </div>
+                <div class="list-group list-group-flush">
+                    <a href="{{ url_for('admin_dashboard') }}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-tachometer-alt me-2"></i> Dashboard
+                    </a>
+                    <a href="{{ url_for('analytics_dashboard') }}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-chart-line me-2"></i> Analytics
+                    </a>
+                    <a href="{{ url_for('job_scraper') }}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-spider me-2"></i> Job Scraper
+                    </a>
+                    <a href="{{ url_for('manage_users') }}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-users me-2"></i> Users
+                    </a>
+                    <a href="{{ url_for('manage_jobs') }}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-briefcase me-2"></i> Jobs
+                    </a>
+                    <a href="{{ url_for('manage_companies') }}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-building me-2"></i> Companies
+                    </a>
+                    <a href="{{ url_for('manage_applications') }}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-file-alt me-2"></i> Applications
+                    </a>
+                    <a href="{{ url_for('manage_categories') }}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-tags me-2"></i> Categories
+                    </a>
+                    <a href="{{ url_for('google_analytics_setup') }}" class="list-group-item list-group-item-action">
+                        <i class="fab fa-google me-2"></i> Google Analytics
+                    </a>
+                    <a href="{{ url_for('manage_site_content') }}" class="list-group-item list-group-item-action active">
+                        <i class="fas fa-palette me-2"></i> Site Content
+                    </a>
+                    <a href="{{ url_for('import_export_data') }}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-exchange-alt me-2"></i> Import/Export
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Main Content -->
+        <div class="col-lg-10 col-md-9">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1 class="h3 mb-0">Site Content Management</h1>
+                <button class="btn btn-primary" id="save-all-changes">
+                    <i class="fas fa-save me-2"></i>Save All Changes
+                </button>
+            </div>
+            
+            <!-- Site Sections Tabs -->
+            <ul class="nav nav-tabs mb-4" id="siteContentTabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="header-tab" data-bs-toggle="tab" data-bs-target="#header" type="button" role="tab" aria-controls="header" aria-selected="true">
+                        <i class="fas fa-heading me-2"></i>Header
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="hero-tab" data-bs-toggle="tab" data-bs-target="#hero" type="button" role="tab" aria-controls="hero" aria-selected="false">
+                        <i class="fas fa-image me-2"></i>Hero Section
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="footer-tab" data-bs-toggle="tab" data-bs-target="#footer" type="button" role="tab" aria-controls="footer" aria-selected="false">
+                        <i class="fas fa-shoe-prints me-2"></i>Footer
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="about-tab" data-bs-toggle="tab" data-bs-target="#about" type="button" role="tab" aria-controls="about" aria-selected="false">
+                        <i class="fas fa-info-circle me-2"></i>About Page
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="home-tab" data-bs-toggle="tab" data-bs-target="#home" type="button" role="tab" aria-controls="home" aria-selected="false">
+                        <i class="fas fa-home me-2"></i>Home Page
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="testimonials-tab" data-bs-toggle="tab" data-bs-target="#testimonials" type="button" role="tab" aria-controls="testimonials" aria-selected="false">
+                        <i class="fas fa-quote-right me-2"></i>Testimonials
+                    </button>
+                </li>
+            </ul>
+            
+            <div class="tab-content" id="siteContentTabContent">
+                <!-- Header Section -->
+                <div class="tab-pane fade show active" id="header" role="tabpanel" aria-labelledby="header-tab">
+                    <div class="card shadow-sm mb-4">
+                        <div class="card-header py-3 bg-light">
+                            <h6 class="m-0 font-weight-bold">Header Configuration</h6>
+                        </div>
+                        <div class="card-body">
+                            <form action="{{ url_for('update_site_content') }}" method="post" id="header-form">
+                                <input type="hidden" name="section" value="header">
+                                
+                                <div class="row mb-3">
+                                    <div class="col-md-6">
+                                        <label for="site_logo" class="form-label">Site Logo</label>
+                                        <div class="input-group mb-2">
+                                            <span class="input-group-text"><i class="fas fa-image"></i></span>
+                                            <input type="file" class="form-control" id="site_logo" name="site_logo">
+                                        </div>
+                                        
+                                        <div class="border p-3 text-center mb-3">
+                                            <img src="/static/img/logo.png" alt="Current Logo" height="50" class="mb-2">
+                                            <div class="small text-muted">Current logo</div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="col-md-6">
+                                        <label for="site_name" class="form-label">Site Name</label>
+                                        <div class="input-group mb-3">
+                                            <span class="input-group-text"><i class="fas fa-font"></i></span>
+                                            <input type="text" class="form-control" id="site_name" name="site_name" value="Remote Hive">
+                                        </div>
+                                        
+                                        <label for="tagline" class="form-label">Tagline</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text"><i class="fas fa-quote-left"></i></span>
+                                            <input type="text" class="form-control" id="tagline" name="tagline" value="Find Your Perfect Remote Job">
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="row">
+                                    <div class="col-12">
+                                        <label class="form-label">Navigation Links</label>
+                                        <div class="table-responsive">
+                                            <table class="table table-bordered" id="nav-links-table">
+                                                <thead class="table-light">
+                                                    <tr>
+                                                        <th>Text</th>
+                                                        <th>URL</th>
+                                                        <th>Order</th>
+                                                        <th>Visible</th>
+                                                        <th>Actions</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    <tr>
+                                                        <td><input type="text" class="form-control" name="nav_text[]" value="Home"></td>
+                                                        <td><input type="text" class="form-control" name="nav_url[]" value="/"></td>
+                                                        <td><input type="number" class="form-control" name="nav_order[]" value="1" min="1"></td>
+                                                        <td>
+                                                            <div class="form-check form-switch">
+                                                                <input class="form-check-input" type="checkbox" name="nav_visible[]" checked>
+                                                            </div>
+                                                        </td>
+                                                        <td>
+                                                            <button type="button" class="btn btn-sm btn-outline-danger delete-row"><i class="fas fa-trash"></i></button>
+                                                        </td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td><input type="text" class="form-control" name="nav_text[]" value="Jobs"></td>
+                                                        <td><input type="text" class="form-control" name="nav_url[]" value="/jobs"></td>
+                                                        <td><input type="number" class="form-control" name="nav_order[]" value="2" min="1"></td>
+                                                        <td>
+                                                            <div class="form-check form-switch">
+                                                                <input class="form-check-input" type="checkbox" name="nav_visible[]" checked>
+                                                            </div>
+                                                        </td>
+                                                        <td>
+                                                            <button type="button" class="btn btn-sm btn-outline-danger delete-row"><i class="fas fa-trash"></i></button>
+                                                        </td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td><input type="text" class="form-control" name="nav_text[]" value="Companies"></td>
+                                                        <td><input type="text" class="form-control" name="nav_url[]" value="/companies"></td>
+                                                        <td><input type="number" class="form-control" name="nav_order[]" value="3" min="1"></td>
+                                                        <td>
+                                                            <div class="form-check form-switch">
+                                                                <input class="form-check-input" type="checkbox" name="nav_visible[]" checked>
+                                                            </div>
+                                                        </td>
+                                                        <td>
+                                                            <button type="button" class="btn btn-sm btn-outline-danger delete-row"><i class="fas fa-trash"></i></button>
+                                                        </td>
+                                                    </tr>
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                        <button type="button" class="btn btn-sm btn-outline-primary" id="add-nav-link">
+                                            <i class="fas fa-plus me-1"></i> Add Navigation Link
+                                        </button>
+                                    </div>
+                                </div>
+                                
+                                <div class="mt-4">
+                                    <button type="submit" class="btn btn-primary">Save Header Settings</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Hero Section -->
+                <div class="tab-pane fade" id="hero" role="tabpanel" aria-labelledby="hero-tab">
+                    <div class="card shadow-sm mb-4">
+                        <div class="card-header py-3 bg-light">
+                            <h6 class="m-0 font-weight-bold">Hero Section Configuration</h6>
+                        </div>
+                        <div class="card-body">
+                            <form action="{{ url_for('update_site_content') }}" method="post" id="hero-form">
+                                <input type="hidden" name="section" value="hero">
+                                
+                                <div class="row mb-3">
+                                    <div class="col-md-6">
+                                        <label for="hero_headline" class="form-label">Headline</label>
+                                        <input type="text" class="form-control" id="hero_headline" name="hero_headline" value="Find Your Dream Remote Job Today">
+                                        
+                                        <label for="hero_subheadline" class="form-label mt-3">Subheadline</label>
+                                        <textarea class="form-control" id="hero_subheadline" name="hero_subheadline" rows="2">Discover thousands of remote opportunities worldwide and work from anywhere</textarea>
+                                        
+                                        <label for="cta_text" class="form-label mt-3">CTA Button Text</label>
+                                        <input type="text" class="form-control" id="cta_text" name="cta_text" value="Browse Jobs">
+                                        
+                                        <label for="cta_url" class="form-label mt-3">CTA Button URL</label>
+                                        <input type="text" class="form-control" id="cta_url" name="cta_url" value="/jobs">
+                                    </div>
+                                    
+                                    <div class="col-md-6">
+                                        <label for="hero_image" class="form-label">Hero Image</label>
+                                        <input type="file" class="form-control mb-3" id="hero_image" name="hero_image">
+                                        
+                                        <div class="border p-3 text-center mb-3">
+                                            <img src="/static/img/hero-image.jpg" alt="Current Hero Image" class="img-fluid mb-2">
+                                            <div class="small text-muted">Current hero image</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label class="form-label">Background Style</label>
+                                    <div class="d-flex">
+                                        <div class="form-check me-3">
+                                            <input class="form-check-input" type="radio" name="hero_bg_style" id="hero_bg_image" value="image" checked>
+                                            <label class="form-check-label" for="hero_bg_image">
+                                                Image Background
+                                            </label>
+                                        </div>
+                                        <div class="form-check me-3">
+                                            <input class="form-check-input" type="radio" name="hero_bg_style" id="hero_bg_color" value="color">
+                                            <label class="form-check-label" for="hero_bg_color">
+                                                Color Background
+                                            </label>
+                                        </div>
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="radio" name="hero_bg_style" id="hero_bg_gradient" value="gradient">
+                                            <label class="form-check-label" for="hero_bg_gradient">
+                                                Gradient Background
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="mt-4">
+                                    <button type="submit" class="btn btn-primary">Save Hero Section</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Footer Section -->
+                <div class="tab-pane fade" id="footer" role="tabpanel" aria-labelledby="footer-tab">
+                    <div class="card shadow-sm mb-4">
+                        <div class="card-header py-3 bg-light">
+                            <h6 class="m-0 font-weight-bold">Footer Configuration</h6>
+                        </div>
+                        <div class="card-body">
+                            <form action="{{ url_for('update_site_content') }}" method="post" id="footer-form">
+                                <input type="hidden" name="section" value="footer">
+                                
+                                <div class="row mb-3">
+                                    <div class="col-md-6">
+                                        <label for="footer_text" class="form-label">Copyright Text</label>
+                                        <input type="text" class="form-control mb-3" id="footer_text" name="footer_text" value="© 2025 Remote Hive. All rights reserved.">
+                                        
+                                        <label for="footer_description" class="form-label">Footer Description</label>
+                                        <textarea class="form-control" id="footer_description" name="footer_description" rows="3">Remote Hive is the leading job board for remote opportunities. Find your dream remote job from any location worldwide.</textarea>
+                                    </div>
+                                    
+                                    <div class="col-md-6">
+                                        <label class="form-label">Social Media Links</label>
+                                        <div class="input-group mb-2">
+                                            <span class="input-group-text"><i class="fab fa-facebook"></i></span>
+                                            <input type="text" class="form-control" name="social_facebook" placeholder="Facebook URL" value="https://facebook.com/remotehive">
+                                        </div>
+                                        <div class="input-group mb-2">
+                                            <span class="input-group-text"><i class="fab fa-twitter"></i></span>
+                                            <input type="text" class="form-control" name="social_twitter" placeholder="Twitter URL" value="https://twitter.com/remotehive">
+                                        </div>
+                                        <div class="input-group mb-2">
+                                            <span class="input-group-text"><i class="fab fa-linkedin"></i></span>
+                                            <input type="text" class="form-control" name="social_linkedin" placeholder="LinkedIn URL" value="https://linkedin.com/company/remotehive">
+                                        </div>
+                                        <div class="input-group mb-2">
+                                            <span class="input-group-text"><i class="fab fa-instagram"></i></span>
+                                            <input type="text" class="form-control" name="social_instagram" placeholder="Instagram URL" value="https://instagram.com/remotehive">
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label class="form-label">Footer Columns</label>
+                                    <div class="row" id="footer-columns">
+                                        <div class="col-md-4 mb-3">
+                                            <div class="card">
+                                                <div class="card-header">
+                                                    <div class="input-group">
+                                                        <input type="text" class="form-control" name="footer_col_title[]" value="Company">
+                                                        <button type="button" class="btn btn-outline-danger delete-footer-col"><i class="fas fa-times"></i></button>
+                                                    </div>
+                                                </div>
+                                                <div class="card-body">
+                                                    <div class="footer-links-list">
+                                                        <div class="input-group mb-2">
+                                                            <input type="text" class="form-control" name="footer_link_text[0][]" placeholder="Link text" value="About Us">
+                                                            <input type="text" class="form-control" name="footer_link_url[0][]" placeholder="URL" value="/about">
+                                                            <button type="button" class="btn btn-outline-danger delete-footer-link"><i class="fas fa-times"></i></button>
+                                                        </div>
+                                                        <div class="input-group mb-2">
+                                                            <input type="text" class="form-control" name="footer_link_text[0][]" placeholder="Link text" value="Careers">
+                                                            <input type="text" class="form-control" name="footer_link_url[0][]" placeholder="URL" value="/careers">
+                                                            <button type="button" class="btn btn-outline-danger delete-footer-link"><i class="fas fa-times"></i></button>
+                                                        </div>
+                                                        <div class="input-group mb-2">
+                                                            <input type="text" class="form-control" name="footer_link_text[0][]" placeholder="Link text" value="Blog">
+                                                            <input type="text" class="form-control" name="footer_link_url[0][]" placeholder="URL" value="/blog">
+                                                            <button type="button" class="btn btn-outline-danger delete-footer-link"><i class="fas fa-times"></i></button>
+                                                        </div>
+                                                    </div>
+                                                    <button type="button" class="btn btn-sm btn-outline-primary add-footer-link" data-col="0"><i class="fas fa-plus me-1"></i> Add Link</button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <button type="button" class="btn btn-sm btn-outline-primary mt-2" id="add-footer-column">
+                                        <i class="fas fa-plus me-1"></i> Add Footer Column
+                                    </button>
+                                </div>
+                                
+                                <div class="mt-4">
+                                    <button type="submit" class="btn btn-primary">Save Footer Settings</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Other tabs content would go here -->
+                <div class="tab-pane fade" id="about" role="tabpanel" aria-labelledby="about-tab">
+                    <div class="card shadow-sm">
+                        <div class="card-header py-3 bg-light">
+                            <h6 class="m-0 font-weight-bold">About Page Content</h6>
+                        </div>
+                        <div class="card-body">
+                            <form action="{{ url_for('update_site_content') }}" method="post">
+                                <input type="hidden" name="section" value="about">
+                                
+                                <div class="mb-3">
+                                    <label for="about_title" class="form-label">Page Title</label>
+                                    <input type="text" class="form-control" id="about_title" name="about_title" value="About Remote Hive">
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="about_content" class="form-label">Page Content</label>
+                                    <textarea class="form-control" id="about_content" name="about_content" rows="10" style="min-height: 300px;"># About Remote Hive
+
+Remote Hive is the leading job board platform dedicated to connecting talented professionals with remote job opportunities around the world.
+
+## Our Mission
+
+Our mission is to make remote work accessible to everyone, everywhere. We believe that talent knows no geographical boundaries, and that's why we're committed to helping people find meaningful remote careers regardless of where they're located.
+
+## Why Choose Remote Hive?
+
+- **Curated Job Listings**: We carefully review every job posting to ensure quality and relevance.
+- **Global Reach**: Connect with employers from around the world seeking remote talent.
+- **Community-Focused**: We're building a community of remote workers who support each other.</textarea>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="team_members" class="form-label">Team Members</label>
+                                    <div class="table-responsive">
+                                        <table class="table table-bordered" id="team-members-table">
+                                            <thead class="table-light">
+                                                <tr>
+                                                    <th>Name</th>
+                                                    <th>Position</th>
+                                                    <th>Bio</th>
+                                                    <th>Photo</th>
+                                                    <th>Actions</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <tr>
+                                                    <td><input type="text" class="form-control" name="team_name[]" value="John Doe"></td>
+                                                    <td><input type="text" class="form-control" name="team_position[]" value="CEO & Founder"></td>
+                                                    <td><textarea class="form-control" name="team_bio[]" rows="2">John has over 15 years of experience in recruitment and tech.</textarea></td>
+                                                    <td><input type="file" class="form-control" name="team_photo[]"></td>
+                                                    <td>
+                                                        <button type="button" class="btn btn-sm btn-outline-danger delete-row"><i class="fas fa-trash"></i></button>
+                                                    </td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                    <button type="button" class="btn btn-sm btn-outline-primary" id="add-team-member">
+                                        <i class="fas fa-plus me-1"></i> Add Team Member
+                                    </button>
+                                </div>
+                                
+                                <div class="mt-4">
+                                    <button type="submit" class="btn btn-primary">Save About Page</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="tab-pane fade" id="home" role="tabpanel" aria-labelledby="home-tab">
+                    <!-- Home page content editor -->
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        Home page editor is in development. Coming soon!
+                    </div>
+                </div>
+                
+                <div class="tab-pane fade" id="testimonials" role="tabpanel" aria-labelledby="testimonials-tab">
+                    <!-- Testimonials editor -->
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        Testimonials editor is in development. Coming soon!
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Add navigation link
+        document.getElementById('add-nav-link').addEventListener('click', function() {
+            const tbody = document.querySelector('#nav-links-table tbody');
+            const newRow = document.createElement('tr');
+            newRow.innerHTML = `
+                <td><input type="text" class="form-control" name="nav_text[]" value=""></td>
+                <td><input type="text" class="form-control" name="nav_url[]" value="/"></td>
+                <td><input type="number" class="form-control" name="nav_order[]" value="${tbody.children.length + 1}" min="1"></td>
+                <td>
+                    <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox" name="nav_visible[]" checked>
+                    </div>
+                </td>
+                <td>
+                    <button type="button" class="btn btn-sm btn-outline-danger delete-row"><i class="fas fa-trash"></i></button>
+                </td>
+            `;
+            tbody.appendChild(newRow);
+            
+            // Add event listener to new delete button
+            newRow.querySelector('.delete-row').addEventListener('click', function() {
+                this.closest('tr').remove();
+            });
+        });
+        
+        // Delete row functionality
+        document.querySelectorAll('.delete-row').forEach(button => {
+            button.addEventListener('click', function() {
+                this.closest('tr').remove();
+            });
+        });
+        
+        // Add footer column
+        document.getElementById('add-footer-column').addEventListener('click', function() {
+            const footerColumns = document.getElementById('footer-columns');
+            const columnCount = footerColumns.children.length;
+            
+            const newColumn = document.createElement('div');
+            newColumn.className = 'col-md-4 mb-3';
+            newColumn.innerHTML = `
+                <div class="card">
+                    <div class="card-header">
+                        <div class="input-group">
+                            <input type="text" class="form-control" name="footer_col_title[]" value="New Column">
+                            <button type="button" class="btn btn-outline-danger delete-footer-col"><i class="fas fa-times"></i></button>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="footer-links-list">
+                            <div class="input-group mb-2">
+                                <input type="text" class="form-control" name="footer_link_text[${columnCount}][]" placeholder="Link text" value="New Link">
+                                <input type="text" class="form-control" name="footer_link_url[${columnCount}][]" placeholder="URL" value="/">
+                                <button type="button" class="btn btn-outline-danger delete-footer-link"><i class="fas fa-times"></i></button>
+                            </div>
+                        </div>
+                        <button type="button" class="btn btn-sm btn-outline-primary add-footer-link" data-col="${columnCount}"><i class="fas fa-plus me-1"></i> Add Link</button>
+                    </div>
+                </div>
+            `;
+            footerColumns.appendChild(newColumn);
+            
+            // Add event listeners to new buttons
+            newColumn.querySelector('.delete-footer-col').addEventListener('click', function() {
+                this.closest('.col-md-4').remove();
+            });
+            
+            newColumn.querySelector('.add-footer-link').addEventListener('click', function() {
+                addFooterLink(this);
+            });
+            
+            newColumn.querySelector('.delete-footer-link').addEventListener('click', function() {
+                this.closest('.input-group').remove();
+            });
+        });
+        
+        // Add footer link
+        document.querySelectorAll('.add-footer-link').forEach(button => {
+            button.addEventListener('click', function() {
+                addFooterLink(this);
+            });
+        });
+        
+        function addFooterLink(button) {
+            const colIndex = button.getAttribute('data-col');
+            const linksList = button.previousElementSibling;
+            
+            const newLink = document.createElement('div');
+            newLink.className = 'input-group mb-2';
+            newLink.innerHTML = `
+                <input type="text" class="form-control" name="footer_link_text[${colIndex}][]" placeholder="Link text" value="">
+                <input type="text" class="form-control" name="footer_link_url[${colIndex}][]" placeholder="URL" value="/">
+                <button type="button" class="btn btn-outline-danger delete-footer-link"><i class="fas fa-times"></i></button>
+            `;
+            linksList.appendChild(newLink);
+            
+            // Add event listener to new delete button
+            newLink.querySelector('.delete-footer-link').addEventListener('click', function() {
+                this.closest('.input-group').remove();
+            });
+        }
+        
+        // Delete footer column
+        document.querySelectorAll('.delete-footer-col').forEach(button => {
+            button.addEventListener('click', function() {
+                this.closest('.col-md-4').remove();
+            });
+        });
+        
+        // Delete footer link
+        document.querySelectorAll('.delete-footer-link').forEach(button => {
+            button.addEventListener('click', function() {
+                this.closest('.input-group').remove();
+            });
+        });
+        
+        // Add team member
+        document.getElementById('add-team-member').addEventListener('click', function() {
+            const tbody = document.querySelector('#team-members-table tbody');
+            const newRow = document.createElement('tr');
+            newRow.innerHTML = `
+                <td><input type="text" class="form-control" name="team_name[]" value=""></td>
+                <td><input type="text" class="form-control" name="team_position[]" value=""></td>
+                <td><textarea class="form-control" name="team_bio[]" rows="2"></textarea></td>
+                <td><input type="file" class="form-control" name="team_photo[]"></td>
+                <td>
+                    <button type="button" class="btn btn-sm btn-outline-danger delete-row"><i class="fas fa-trash"></i></button>
+                </td>
+            `;
+            tbody.appendChild(newRow);
+            
+            // Add event listener to new delete button
+            newRow.querySelector('.delete-row').addEventListener('click', function() {
+                this.closest('tr').remove();
+            });
+        });
+        
+        // Save all changes button
+        document.getElementById('save-all-changes').addEventListener('click', function() {
+            // Get active tab form and submit it
+            const activeTab = document.querySelector('.tab-pane.active');
+            if (activeTab) {
+                const form = activeTab.querySelector('form');
+                if (form) {
+                    form.submit();
+                }
+            }
+        });
+    });
+</script>
+{% endblock %}

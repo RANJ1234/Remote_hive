@@ -106,6 +106,35 @@
                                     </label>
                                 </div>
                                 
+                                <div class="mb-3 border-top pt-3">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="enable_schedule" name="enable_schedule">
+                                        <label class="form-check-label" for="enable_schedule">
+                                            <strong>Schedule Regular Scraping</strong>
+                                        </label>
+                                    </div>
+                                    
+                                    <div id="schedule-options" class="mt-3" style="display:none;">
+                                        <div class="row g-3">
+                                            <div class="col-md-6">
+                                                <label for="schedule_frequency" class="form-label">Frequency</label>
+                                                <select class="form-select" id="schedule_frequency" name="schedule_frequency">
+                                                    <option value="daily">Daily</option>
+                                                    <option value="weekly">Weekly</option>
+                                                    <option value="monthly">Monthly</option>
+                                                </select>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <label for="schedule_time" class="form-label">Time (UTC)</label>
+                                                <input type="time" class="form-control" id="schedule_time" name="schedule_time" value="00:00">
+                                            </div>
+                                        </div>
+                                        <div class="form-text">
+                                            Jobs will be automatically scraped from this URL according to this schedule
+                                        </div>
+                                    </div>
+                                </div>
+                                
                                 <button type="submit" class="btn btn-primary">
                                     <i class="fas fa-download me-2"></i>Scrape Jobs
                                 </button>
