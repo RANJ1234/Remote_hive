@@ -135,6 +135,46 @@
                                     </div>
                                 </div>
                                 
+                                <hr class="my-3">
+                                
+                                <h6>Scheduled Job Scraping</h6>
+                                <div class="table-responsive">
+                                    <table class="table table-bordered table-hover">
+                                        <thead class="table-light">
+                                            <tr>
+                                                <th>Source</th>
+                                                <th>Company</th>
+                                                <th>Frequency</th>
+                                                <th>Next Run</th>
+                                                <th>Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr>
+                                                <td>LinkedIn</td>
+                                                <td>Tech Solutions Inc</td>
+                                                <td>Daily</td>
+                                                <td>2025-05-03 00:00</td>
+                                                <td>
+                                                    <button class="btn btn-sm btn-outline-primary">Edit</button>
+                                                    <button class="btn btn-sm btn-outline-danger">Disable</button>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td>Indeed</td>
+                                                <td>Global Innovations</td>
+                                                <td>Weekly</td>
+                                                <td>2025-05-09 12:00</td>
+                                                <td>
+                                                    <button class="btn btn-sm btn-outline-primary">Edit</button>
+                                                    <button class="btn btn-sm btn-outline-danger">Disable</button>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                    </div>
+                                </div>
+                                
                                 <button type="submit" class="btn btn-primary">
                                     <i class="fas fa-download me-2"></i>Scrape Jobs
                                 </button>
@@ -246,4 +286,20 @@
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Toggle scheduling options visibility
+        const enableScheduleCheckbox = document.getElementById('enable_schedule');
+        const scheduleOptions = document.getElementById('schedule-options');
+        
+        if (enableScheduleCheckbox && scheduleOptions) {
+            enableScheduleCheckbox.addEventListener('change', function() {
+                scheduleOptions.style.display = this.checked ? 'block' : 'none';
+            });
+        }
+    });
+</script>
 {% endblock %}
