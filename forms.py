@@ -17,14 +17,14 @@ class RegisterForm(FlaskForm):
     confirm_password = PasswordField('Confirm Password', validators=[DataRequired(), EqualTo('password')])
     role = SelectField('Register as', choices=[('jobseeker', 'Job Seeker'), ('employer', 'Employer')])
     submit = SubmitField('Register')
-    
+
     def validate_username(self, username):
-        user = User.query.filter_by(username=username.data).first()
+        user = User.objects(username=username.data).first()
         if user:
             raise ValidationError('Username already taken. Please choose a different one.')
-    
+
     def validate_email(self, email):
-        user = User.query.filter_by(email=email.data).first()
+        user = User.objects(email=email.data).first()
         if user:
             raise ValidationError('Email already registered. Please use a different one or login.')
 
@@ -37,7 +37,7 @@ class JobseekerProfileForm(FlaskForm):
     current_salary = IntegerField('Current Salary (Annual)', validators=[Optional()])
     expected_salary = IntegerField('Expected Salary (Annual)', validators=[Optional()])
     location = StringField('Location', validators=[Length(max=100)])
-    remote_preference = SelectField('Work Type Preference', 
+    remote_preference = SelectField('Work Type Preference',
                                     choices=[('remote', 'Remote'), ('hybrid', 'Hybrid'), ('on-site', 'On-Site')])
     resume = FileField('Upload Resume', validators=[FileAllowed(['pdf', 'doc', 'docx'], 'Only PDF and Word documents allowed!')])
     profile_picture = FileField('Profile Picture', validators=[FileAllowed(['jpg', 'png', 'jpeg'], 'Only JPG and PNG images allowed!')])
@@ -48,8 +48,8 @@ class CompanyForm(FlaskForm):
     website = StringField('Website', validators=[URL(), Length(max=255)])
     description = TextAreaField('Company Description', validators=[DataRequired()])
     industry = StringField('Industry', validators=[DataRequired(), Length(max=100)])
-    company_size = SelectField('Company Size', 
-                              choices=[('1-10', '1-10 employees'), 
+    company_size = SelectField('Company Size',
+                              choices=[('1-10', '1-10 employees'),
                                        ('11-50', '11-50 employees'),
                                        ('51-200', '51-200 employees'),
                                        ('201-500', '201-500 employees'),
@@ -58,8 +58,8 @@ class CompanyForm(FlaskForm):
                                        ('5001+', '5001+ employees')])
     founded_year = IntegerField('Founded Year', validators=[Optional(), NumberRange(min=1800, max=2030)])
     headquarters = StringField('Headquarters', validators=[Length(max=100)])
-    company_type = SelectField('Company Type', 
-                              choices=[('MNC', 'MNC'), 
+    company_type = SelectField('Company Type',
+                              choices=[('MNC', 'MNC'),
                                        ('Startup', 'Startup'),
                                        ('Product', 'Product'),
                                        ('Service', 'Service'),
@@ -73,8 +73,8 @@ class JobPostForm(FlaskForm):
     title = StringField('Job Title', validators=[DataRequired(), Length(max=100)])
     location = StringField('Location', validators=[Length(max=100)])
     is_remote = BooleanField('Remote Job')
-    job_type = SelectField('Job Type', 
-                          choices=[('Full-time', 'Full-time'), 
+    job_type = SelectField('Job Type',
+                          choices=[('Full-time', 'Full-time'),
                                    ('Part-time', 'Part-time'),
                                    ('Contract', 'Contract'),
                                    ('Internship', 'Internship'),

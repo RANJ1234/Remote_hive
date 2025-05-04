@@ -1,0 +1,153 @@
+/* Admin Panel Styles */
+
+/* Sidebar */
+.admin-sidebar {
+    border-radius: 0.25rem;
+}
+
+.admin-sidebar .list-group-item {
+    border-left: 0;
+    border-right: 0;
+    padding: 0.75rem 1.25rem;
+}
+
+.admin-sidebar .list-group-item:first-child {
+    border-top: 0;
+}
+
+.admin-sidebar .list-group-item.active {
+    background-color: #4e73df;
+    border-color: #4e73df;
+}
+
+/* Cards */
+.card {
+    border: none;
+    box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15);
+}
+
+.card-header {
+    background-color: #f8f9fc;
+    border-bottom: 1px solid #e3e6f0;
+}
+
+/* Border Left Utilities */
+.border-left-primary {
+    border-left: 0.25rem solid #4e73df !important;
+}
+
+.border-left-success {
+    border-left: 0.25rem solid #1cc88a !important;
+}
+
+.border-left-info {
+    border-left: 0.25rem solid #36b9cc !important;
+}
+
+.border-left-warning {
+    border-left: 0.25rem solid #f6c23e !important;
+}
+
+.border-left-danger {
+    border-left: 0.25rem solid #e74a3b !important;
+}
+
+/* Text Utilities */
+.text-gray-300 {
+    color: #dddfeb !important;
+}
+
+.text-gray-800 {
+    color: #5a5c69 !important;
+}
+
+/* Chart Container */
+.chart-container {
+    position: relative;
+    height: 15rem;
+}
+
+/* Form Styles */
+.form-group {
+    margin-bottom: 1rem;
+}
+
+/* Table Styles */
+.table-responsive {
+    overflow-x: auto;
+}
+
+/* Dashboard Stats */
+.stat-card {
+    border-radius: 0.25rem;
+    box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15);
+    margin-bottom: 1.5rem;
+}
+
+.stat-card-body {
+    padding: 1.25rem;
+}
+
+.stat-card-icon {
+    font-size: 2rem;
+    opacity: 0.3;
+}
+
+.stat-card-title {
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    margin-bottom: 0.25rem;
+}
+
+.stat-card-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin-bottom: 0;
+}
+
+/* Analytics Dashboard */
+.analytics-card {
+    margin-bottom: 1.5rem;
+}
+
+.analytics-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem;
+}
+
+.analytics-card-title {
+    margin-bottom: 0;
+    font-weight: 700;
+}
+
+.analytics-card-body {
+    padding: 1.25rem;
+}
+
+/* Content Editor */
+.content-editor {
+    min-height: 300px;
+    border: 1px solid #ced4da;
+    border-radius: 0.25rem;
+    padding: 0.5rem;
+}
+
+/* File Upload */
+.custom-file-upload {
+    display: inline-block;
+    padding: 6px 12px;
+    cursor: pointer;
+    border: 1px solid #ced4da;
+    border-radius: 0.25rem;
+    background-color: #f8f9fc;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+    .chart-container {
+        height: 12rem;
+    }
+}

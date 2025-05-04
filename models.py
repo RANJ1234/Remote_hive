@@ -1,175 +1,163 @@
 from datetime import datetime
-from app import db
 from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
+from mongoengine import Document, StringField, EmailField, DateTimeField, BooleanField, ReferenceField, ListField, IntField, FloatField, EmbeddedDocument, EmbeddedDocumentField, EmbeddedDocumentListField, CASCADE
 
-# Association table for job_skills
-job_skills = db.Table('job_skills',
-    db.Column('job_id', db.Integer, db.ForeignKey('job.id'), primary_key=True),
-    db.Column('skill_id', db.Integer, db.ForeignKey('skill.id'), primary_key=True)
-)
+class Skill(Document):
+    name = StringField(required=True, unique=True)
+    category = StringField()
 
-# Association table for user_skills (linked to user directly)
-user_skills = db.Table('user_skills',
-    db.Column('user_id', db.Integer, db.ForeignKey('user.id'), primary_key=True),
-    db.Column('skill_id', db.Integer, db.ForeignKey('skill.id'), primary_key=True)
-)
+    meta = {'collection': 'skills'}
 
-class User(UserMixin, db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(64), unique=True, nullable=False)
-    email = db.Column(db.String(120), unique=True, nullable=False)
-    password_hash = db.Column(db.String(256), nullable=False)
-    role = db.Column(db.String(20), nullable=False, default='jobseeker')  # 'admin', 'employer', 'jobseeker'
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    last_login = db.Column(db.DateTime, nullable=True)
-    is_active = db.Column(db.Boolean, default=True)
-    
-    # Relationships
-    profile = db.relationship('JobseekerProfile', backref='user', uselist=False, cascade='all, delete-orphan')
-    company = db.relationship('Company', backref='owner', uselist=False, cascade='all, delete-orphan')
-    applications = db.relationship('JobApplication', backref='applicant', lazy='dynamic', cascade='all, delete-orphan')
-    skills = db.relationship('Skill', secondary=user_skills, backref=db.backref('users_with_skill', lazy='dynamic'))
-    
+    def __str__(self):
+        return self.name
+
+class User(Document, UserMixin):
+    username = StringField(max_length=64, required=True, unique=True)
+    email = EmailField(required=True, unique=True)
+    password_hash = StringField(required=True)
+    role = StringField(required=True, default='jobseeker')  # 'admin', 'employer', 'jobseeker'
+    created_at = DateTimeField(default=datetime.utcnow)
+    last_login = DateTimeField()
+    is_active = BooleanField(default=True)
+    skills = ListField(ReferenceField(Skill))
+
+    meta = {'collection': 'users'}
+
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
-        
+
     def check_password(self, password):
         return check_password_hash(self.password_hash, password)
-    
+
     def is_admin(self):
         return self.role == 'admin'
-    
+
     def is_employer(self):
         return self.role == 'employer'
-    
+
     def is_jobseeker(self):
         return self.role == 'jobseeker'
-    
-    def __repr__(self):
-        return f'<User {self.username}>'
 
-class JobseekerProfile(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    full_name = db.Column(db.String(100), nullable=True)
-    phone = db.Column(db.String(20), nullable=True)
-    resume_path = db.Column(db.String(255), nullable=True)
-    profile_picture = db.Column(db.String(255), nullable=True)
-    headline = db.Column(db.String(200), nullable=True)
-    summary = db.Column(db.Text, nullable=True)
-    experience_years = db.Column(db.Integer, default=0)
-    current_salary = db.Column(db.Integer, nullable=True)
-    expected_salary = db.Column(db.Integer, nullable=True)
-    location = db.Column(db.String(100), nullable=True)
-    remote_preference = db.Column(db.String(50), nullable=True)  # 'remote', 'hybrid', 'on-site'
-    
-    def __repr__(self):
-        return f'<JobseekerProfile {self.full_name}>'
+    def get_id(self):
+        return str(self.id)
 
-class Company(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    name = db.Column(db.String(100), nullable=False)
-    logo_path = db.Column(db.String(255), nullable=True)
-    website = db.Column(db.String(255), nullable=True)
-    description = db.Column(db.Text, nullable=True)
-    industry = db.Column(db.String(100), nullable=True)
-    company_size = db.Column(db.String(50), nullable=True)
-    founded_year = db.Column(db.Integer, nullable=True)
-    headquarters = db.Column(db.String(100), nullable=True)
-    company_type = db.Column(db.String(50), nullable=True)  # 'MNC', 'Startup', 'Product', etc.
-    is_featured = db.Column(db.Boolean, default=False)
-    rating = db.Column(db.Float, default=0.0)
-    review_count = db.Column(db.Integer, default=0)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    
-    # Relationships
-    jobs = db.relationship('Job', backref='company', lazy='dynamic', cascade='all, delete-orphan')
-    reviews = db.relationship('CompanyReview', backref='company', lazy='dynamic', cascade='all, delete-orphan')
-    
-    def __repr__(self):
-        return f'<Company {self.name}>'
+    def __str__(self):
+        return self.username
 
-class CompanyReview(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    company_id = db.Column(db.Integer, db.ForeignKey('company.id'), nullable=False)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    rating = db.Column(db.Integer, nullable=False)  # 1-5
-    title = db.Column(db.String(100), nullable=False)
-    review_text = db.Column(db.Text, nullable=False)
-    pros = db.Column(db.Text, nullable=True)
-    cons = db.Column(db.Text, nullable=True)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    
-    # Relationship
-    user = db.relationship('User', backref=db.backref('reviews', lazy='dynamic'))
-    
-    def __repr__(self):
-        return f'<CompanyReview {self.title}>'
+class JobseekerProfile(Document):
+    user = ReferenceField(User, required=True, unique=True)
+    full_name = StringField(max_length=100)
+    phone = StringField(max_length=20)
+    resume_path = StringField(max_length=255)
+    profile_picture = StringField(max_length=255)
+    headline = StringField(max_length=200)
+    summary = StringField()
+    experience_years = IntField(default=0)
+    current_salary = IntField()
+    expected_salary = IntField()
+    location = StringField(max_length=100)
+    remote_preference = StringField(max_length=50)  # 'remote', 'hybrid', 'on-site'
 
-class Job(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    company_id = db.Column(db.Integer, db.ForeignKey('company.id'), nullable=False)
-    title = db.Column(db.String(100), nullable=False)
-    location = db.Column(db.String(100), nullable=True)
-    is_remote = db.Column(db.Boolean, default=False)
-    job_type = db.Column(db.String(50), nullable=False)  # 'Full-time', 'Part-time', 'Contract', etc.
-    description = db.Column(db.Text, nullable=False)
-    requirements = db.Column(db.Text, nullable=True)
-    salary_min = db.Column(db.Integer, nullable=True)
-    salary_max = db.Column(db.Integer, nullable=True)
-    experience_required = db.Column(db.String(50), nullable=True)  # '0-1 years', '1-3 years', etc.
-    education_required = db.Column(db.String(100), nullable=True)
-    posted_date = db.Column(db.DateTime, default=datetime.utcnow)
-    deadline = db.Column(db.DateTime, nullable=True)
-    is_active = db.Column(db.Boolean, default=True)
-    views_count = db.Column(db.Integer, default=0)
-    applications_count = db.Column(db.Integer, default=0)
-    
-    # Relationships
-    skills = db.relationship('Skill', secondary=job_skills, backref=db.backref('jobs', lazy='dynamic'))
-    applications = db.relationship('JobApplication', backref='job', lazy='dynamic', cascade='all, delete-orphan')
-    
-    def __repr__(self):
-        return f'<Job {self.title}>'
+    meta = {'collection': 'jobseeker_profiles'}
 
-class JobApplication(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    job_id = db.Column(db.Integer, db.ForeignKey('job.id'), nullable=False)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    resume_path = db.Column(db.String(255), nullable=True)
-    cover_letter = db.Column(db.Text, nullable=True)
-    status = db.Column(db.String(20), default='applied')  # 'applied', 'reviewed', 'shortlisted', 'rejected', 'hired'
-    applied_date = db.Column(db.DateTime, default=datetime.utcnow)
-    last_updated = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
-    
-    def __repr__(self):
-        return f'<JobApplication {self.id}>'
+    def __str__(self):
+        return f'{self.full_name}'
 
-class Skill(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(50), nullable=False, unique=True)
-    
-    def __repr__(self):
-        return f'<Skill {self.name}>'
+class Company(Document):
+    user = ReferenceField(User, required=True, unique=True)
+    name = StringField(max_length=100, required=True)
+    logo_path = StringField(max_length=255)
+    website = StringField(max_length=255)
+    description = StringField()
+    industry = StringField(max_length=100)
+    company_size = StringField(max_length=50)
+    founded_year = IntField()
+    headquarters = StringField(max_length=100)
+    company_type = StringField(max_length=50)  # 'MNC', 'Startup', 'Product', etc.
+    is_featured = BooleanField(default=False)
+    rating = FloatField(default=0.0)
+    review_count = IntField(default=0)
+    created_at = DateTimeField(default=datetime.utcnow)
 
-class CompanyCategory(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(50), nullable=False, unique=True)
-    description = db.Column(db.Text, nullable=True)
-    active_companies_count = db.Column(db.Integer, default=0)
-    
-    # Relationships
-    company_categories = db.relationship('CompanyCategoryAssociation', backref='category', lazy='dynamic', cascade='all, delete-orphan')
-    
-    def __repr__(self):
-        return f'<CompanyCategory {self.name}>'
+    meta = {'collection': 'companies'}
 
-class CompanyCategoryAssociation(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    company_id = db.Column(db.Integer, db.ForeignKey('company.id'), nullable=False)
-    category_id = db.Column(db.Integer, db.ForeignKey('company_category.id'), nullable=False)
-    
-    # Relationship
-    company = db.relationship('Company', backref=db.backref('categories', lazy='dynamic'))
+    def __str__(self):
+        return self.name
+
+class CompanyReview(Document):
+    company = ReferenceField(Company, required=True)
+    user = ReferenceField(User, required=True)
+    rating = IntField(required=True, min_value=1, max_value=5)  # 1-5
+    title = StringField(max_length=100, required=True)
+    review_text = StringField(required=True)
+    pros = StringField()
+    cons = StringField()
+    created_at = DateTimeField(default=datetime.utcnow)
+
+    meta = {'collection': 'company_reviews'}
+
+    def __str__(self):
+        return self.title
+
+class Job(Document):
+    company = ReferenceField(Company, required=True)
+    title = StringField(max_length=100, required=True)
+    location = StringField(max_length=100)
+    is_remote = BooleanField(default=False)
+    job_type = StringField(max_length=50, required=True)  # 'Full-time', 'Part-time', 'Contract', etc.
+    description = StringField(required=True)
+    requirements = StringField()
+    salary_min = IntField()
+    salary_max = IntField()
+    experience_required = StringField(max_length=50)  # '0-1 years', '1-3 years', etc.
+    education_required = StringField(max_length=100)
+    posted_date = DateTimeField(default=datetime.utcnow)
+    deadline = DateTimeField()
+    is_active = BooleanField(default=True)
+    views_count = IntField(default=0)
+    applications_count = IntField(default=0)
+    skills = ListField(ReferenceField(Skill))
+
+    meta = {'collection': 'jobs'}
+
+    def __str__(self):
+        return self.title
+
+class JobApplication(Document):
+    job = ReferenceField(Job, required=True)
+    user = ReferenceField(User, required=True)
+    resume_path = StringField(max_length=255)
+    cover_letter = StringField()
+    status = StringField(max_length=20, default='applied')  # 'applied', 'reviewed', 'shortlisted', 'rejected', 'hired'
+    applied_date = DateTimeField(default=datetime.utcnow)
+    last_updated = DateTimeField(default=datetime.utcnow)
+
+    meta = {'collection': 'job_applications'}
+
+    def __str__(self):
+        return f'Application for {self.job.title} by {self.user.username}'
+
+class CompanyCategory(Document):
+    name = StringField(max_length=50, required=True, unique=True)
+    description = StringField()
+    active_companies_count = IntField(default=0)
+
+    meta = {'collection': 'company_categories'}
+
+    def __str__(self):
+        return self.name
+
+class CompanyCategoryAssociation(Document):
+    company = ReferenceField(Company, required=True)
+    category = ReferenceField(CompanyCategory, required=True)
+
+    meta = {
+        'collection': 'company_category_associations',
+        'indexes': [
+            {'fields': ['company', 'category'], 'unique': True}
+        ]
+    }
+
+    def __str__(self):
+        return f'{self.company.name} - {self.category.name}'

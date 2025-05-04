@@ -33,7 +33,7 @@
                 </div>
             </div>
         </div>
-        
+
         <!-- Main Content -->
         <div class="col-lg-10 col-md-9">
             <div class="d-flex justify-content-between align-items-center mb-4">
@@ -42,7 +42,7 @@
                     <i class="fas fa-plus me-1"></i> Add Company
                 </a>
             </div>
-            
+
             <!-- Filters and Search -->
             <div class="card shadow-sm mb-4">
                 <div class="card-body">
@@ -93,7 +93,7 @@
                     </form>
                 </div>
             </div>
-            
+
             <!-- Companies Table -->
             <div class="card shadow-sm">
                 <div class="card-body">
@@ -132,11 +132,11 @@
                                                 </div>
                                             </div>
                                         </td>
-                                        <td>{{ company.owner.email }}</td>
+                                        <td>{{ company.user.email }}</td>
                                         <td>{{ company.industry or 'N/A' }}</td>
                                         <td>{{ company.company_type or 'N/A' }}</td>
                                         <td>{{ company.company_size or 'N/A' }}</td>
-                                        <td>{{ company.jobs.count() }}</td>
+                                        <td>{{ Job.objects(company=company).count() }}</td>
                                         <td>
                                             <span class="badge bg-{{ 'warning' if company.is_featured else 'light text-dark' }}">
                                                 {{ 'Featured' if company.is_featured else 'Regular' }}
@@ -156,7 +156,7 @@
                                                     <i class="fas fa-trash-alt"></i>
                                                 </button>
                                             </div>
-                                            
+
                                             <!-- Delete Modal -->
                                             <div class="modal fade" id="deleteCompanyModal-{{ company.id }}" tabindex="-1" aria-hidden="true">
                                                 <div class="modal-dialog">
@@ -184,7 +184,7 @@
                             </tbody>
                         </table>
                     </div>
-                    
+
                     <!-- Pagination -->
                     {% if companies.pages > 1 %}
                         <nav aria-label="Company pagination" class="mt-4">
@@ -200,7 +200,7 @@
                                         <span class="page-link" aria-hidden="true">&laquo;</span>
                                     </li>
                                 {% endif %}
-                                
+
                                 {% for page_num in companies.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
                                     {% if page_num %}
                                         {% if page_num == companies.page %}
@@ -218,7 +218,7 @@
                                         </li>
                                     {% endif %}
                                 {% endfor %}
-                                
+
                                 {% if companies.has_next %}
                                     <li class="page-item">
                                         <a class="page-link" href="{{ url_for('manage_companies', page=companies.next_num) }}" aria-label="Next">
