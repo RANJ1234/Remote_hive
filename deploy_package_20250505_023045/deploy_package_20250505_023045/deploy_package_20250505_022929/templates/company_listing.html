@@ -1,0 +1,246 @@
+{% extends 'base.html' %}
+
+{% block title %}Companies - Remote Hive{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="company-listing-header mb-4">
+        <h1 class="h3 mb-4">Explore Top Companies</h1>
+        
+        <!-- Categories Navigation -->
+        <div class="categories-nav mb-4">
+            <div class="scrollable-tabs">
+                <a href="{{ url_for('companies') }}" class="category-tab {% if not selected_category %}active{% endif %}">All Companies</a>
+                {% for category in categories %}
+                    <a href="{{ url_for('companies', category_id=category.id) }}" class="category-tab {% if selected_category == category.id %}active{% endif %}">{{ category.name }}</a>
+                {% endfor %}
+            </div>
+        </div>
+        
+        <!-- Search and Filters -->
+        <div class="company-filters p-3 bg-light rounded shadow-sm">
+            <form action="{{ url_for('companies') }}" method="get" class="row g-3 align-items-center">
+                <div class="col-md-5">
+                    <div class="input-group">
+                        <span class="input-group-text bg-white">
+                            <i class="fas fa-search"></i>
+                        </span>
+                        <input type="text" class="form-control" name="query" placeholder="Search companies..." value="{{ request.args.get('query', '') }}">
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <select class="form-select" name="industry">
+                        <option value="">All Industries</option>
+                        <option value="Technology" {% if request.args.get('industry') == 'Technology' %}selected{% endif %}>Technology</option>
+                        <option value="Healthcare" {% if request.args.get('industry') == 'Healthcare' %}selected{% endif %}>Healthcare</option>
+                        <option value="Finance" {% if request.args.get('industry') == 'Finance' %}selected{% endif %}>Finance</option>
+                        <option value="Education" {% if request.args.get('industry') == 'Education' %}selected{% endif %}>Education</option>
+                        <option value="Retail" {% if request.args.get('industry') == 'Retail' %}selected{% endif %}>Retail</option>
+                        <option value="Manufacturing" {% if request.args.get('industry') == 'Manufacturing' %}selected{% endif %}>Manufacturing</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <select class="form-select" name="company_type">
+                        <option value="">All Types</option>
+                        <option value="MNC" {% if request.args.get('company_type') == 'MNC' %}selected{% endif %}>MNC</option>
+                        <option value="Startup" {% if request.args.get('company_type') == 'Startup' %}selected{% endif %}>Startup</option>
+                        <option value="Product" {% if request.args.get('company_type') == 'Product' %}selected{% endif %}>Product</option>
+                        <option value="Service" {% if request.args.get('company_type') == 'Service' %}selected{% endif %}>Service</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <button type="submit" class="btn btn-primary w-100">Filter</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Companies Grid -->
+    <div class="companies-grid mb-4">
+        <div class="row">
+            {% if companies.items %}
+                {% for company in companies.items %}
+                    <div class="col-lg-3 col-md-4 col-sm-6 mb-4">
+                        <div class="company-card card h-100 shadow-sm">
+                            <div class="company-logo text-center pt-3">
+                                {% if company.logo_path %}
+                                    <img src="{{ url_for('static', filename=company.logo_path) }}" alt="{{ company.name }}" class="img-fluid" style="max-height: 80px;">
+                                {% else %}
+                                    <div class="placeholder-logo">{{ company.name[0] }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="card-body">
+                                <h5 class="card-title company-name">{{ company.name }}</h5>
+                                {% if company.rating > 0 %}
+                                    <div class="company-rating mb-2">
+                                        <span class="rating-stars">
+                                            {% for i in range(5) %}
+                                                {% if i < company.rating|int %}
+                                                    <i class="fas fa-star text-warning"></i>
+                                                {% elif i < company.rating|round(0, 'ceil') %}
+                                                    <i class="fas fa-star-half-alt text-warning"></i>
+                                                {% else %}
+                                                    <i class="far fa-star text-warning"></i>
+                                                {% endif %}
+                                            {% endfor %}
+                                        </span>
+                                        <span class="rating-text">{{ company.rating|round(1) }} 
+                                            {% if company.review_count > 0 %}
+                                            ({{ company.review_count }})
+                                            {% endif %}
+                                        </span>
+                                    </div>
+                                {% endif %}
+                                
+                                <div class="company-info mb-2">
+                                    {% if company.industry %}
+                                        <div class="company-industry mb-1 small">
+                                            <i class="fas fa-industry me-2 text-muted"></i>{{ company.industry }}
+                                        </div>
+                                    {% endif %}
+                                    {% if company.company_size %}
+                                        <div class="company-size mb-1 small">
+                                            <i class="fas fa-users me-2 text-muted"></i>{{ company.company_size }}
+                                        </div>
+                                    {% endif %}
+                                    {% if company.headquarters %}
+                                        <div class="company-location small">
+                                            <i class="fas fa-map-marker-alt me-2 text-muted"></i>{{ company.headquarters }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                
+                                <p class="card-text company-description">{{ company.description|truncate(80) }}</p>
+                            </div>
+                            <div class="card-footer bg-transparent border-0 pb-3">
+                                <a href="{{ url_for('company_details', company_id=company.id) }}" class="btn btn-outline-primary w-100">View Profile</a>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            {% else %}
+                <div class="col-12 text-center py-5">
+                    <i class="fas fa-building fa-3x text-muted mb-3"></i>
+                    <h3>No companies found</h3>
+                    <p class="text-muted">Try adjusting your search criteria or explore different categories.</p>
+                    <a href="{{ url_for('companies') }}" class="btn btn-primary mt-2">View All Companies</a>
+                </div>
+            {% endif %}
+        </div>
+        
+        <!-- Pagination -->
+        {% if companies.pages > 1 %}
+            <nav aria-label="Company listings pagination" class="mt-4">
+                <ul class="pagination justify-content-center">
+                    {% if companies.has_prev %}
+                        <li class="page-item">
+                            <a class="page-link" href="{{ url_for('companies', page=companies.prev_num, category_id=selected_category) }}" aria-label="Previous">
+                                <span aria-hidden="true">&laquo;</span>
+                            </a>
+                        </li>
+                    {% else %}
+                        <li class="page-item disabled">
+                            <span class="page-link" aria-hidden="true">&laquo;</span>
+                        </li>
+                    {% endif %}
+                    
+                    {% for page_num in companies.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
+                        {% if page_num %}
+                            {% if page_num == companies.page %}
+                                <li class="page-item active">
+                                    <span class="page-link">{{ page_num }}</span>
+                                </li>
+                            {% else %}
+                                <li class="page-item">
+                                    <a class="page-link" href="{{ url_for('companies', page=page_num, category_id=selected_category) }}">{{ page_num }}</a>
+                                </li>
+                            {% endif %}
+                        {% else %}
+                            <li class="page-item disabled">
+                                <span class="page-link">...</span>
+                            </li>
+                        {% endif %}
+                    {% endfor %}
+                    
+                    {% if companies.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="{{ url_for('companies', page=companies.next_num, category_id=selected_category) }}" aria-label="Next">
+                                <span aria-hidden="true">&raquo;</span>
+                            </a>
+                        </li>
+                    {% else %}
+                        <li class="page-item disabled">
+                            <span class="page-link" aria-hidden="true">&raquo;</span>
+                        </li>
+                    {% endif %}
+                </ul>
+            </nav>
+        {% endif %}
+    </div>
+    
+    <!-- Why Join Section -->
+    <div class="why-join-section py-4 mb-4">
+        <div class="row align-items-center">
+            <div class="col-md-6">
+                <h2 class="h4 mb-3">Why list your company on Remote Hive?</h2>
+                <div class="why-join-features">
+                    <div class="feature-item d-flex align-items-start mb-3">
+                        <div class="feature-icon me-3">
+                            <i class="fas fa-users fa-2x text-primary"></i>
+                        </div>
+                        <div class="feature-content">
+                            <h3 class="h6 mb-2">Access qualified candidates</h3>
+                            <p class="text-muted">Connect with thousands of skilled professionals looking for remote opportunities.</p>
+                        </div>
+                    </div>
+                    <div class="feature-item d-flex align-items-start mb-3">
+                        <div class="feature-icon me-3">
+                            <i class="fas fa-globe fa-2x text-primary"></i>
+                        </div>
+                        <div class="feature-content">
+                            <h3 class="h6 mb-2">Build your employer brand</h3>
+                            <p class="text-muted">Showcase your company culture and values to attract the right talent.</p>
+                        </div>
+                    </div>
+                    <div class="feature-item d-flex align-items-start">
+                        <div class="feature-icon me-3">
+                            <i class="fas fa-chart-line fa-2x text-primary"></i>
+                        </div>
+                        <div class="feature-content">
+                            <h3 class="h6 mb-2">Track hiring metrics</h3>
+                            <p class="text-muted">Get insights and analytics on your job postings and applications.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="mt-4">
+                    <a href="{{ url_for('register') }}" class="btn btn-primary">Register as Employer</a>
+                </div>
+            </div>
+            <div class="col-md-6 d-none d-md-block">
+                <div class="text-center">
+                    <svg width="400" height="300" viewBox="0 0 400 300" xmlns="http://www.w3.org/2000/svg">
+                        <rect x="0" y="0" width="400" height="300" fill="#f8f9fa" />
+                        <text x="200" y="150" font-family="Arial" font-size="20" text-anchor="middle">Company Growth Illustration</text>
+                    </svg>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Scrollable tabs functionality
+        const tabsContainer = document.querySelector('.scrollable-tabs');
+        if (tabsContainer) {
+            const activeTab = tabsContainer.querySelector('.category-tab.active');
+            if (activeTab) {
+                // Scroll to make active tab visible
+                activeTab.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+            }
+        }
+    });
+</script>
+{% endblock %}

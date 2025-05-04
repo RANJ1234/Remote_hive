@@ -1,0 +1,160 @@
+{% extends 'base.html' %}
+
+{% block title %}Manage Applications - Remote Hive Admin{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="row">
+        <!-- Sidebar -->
+        <div class="col-lg-2 col-md-3">
+            <div class="admin-sidebar card shadow-sm mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Admin Panel</h5>
+                </div>
+                <div class="list-group list-group-flush">
+                    <a href="{{ url_for('admin_dashboard') }}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-tachometer-alt me-2"></i> Dashboard
+                    </a>
+                    <a href="{{ url_for('analytics_dashboard') }}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-chart-line me-2"></i> Analytics
+                    </a>
+                    <a href="{{ url_for('job_scraper') }}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-spider me-2"></i> Job Scraper
+                    </a>
+                    <a href="{{ url_for('manage_users') }}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-users me-2"></i> Users
+                    </a>
+                    <a href="{{ url_for('manage_jobs') }}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-briefcase me-2"></i> Jobs
+                    </a>
+                    <a href="{{ url_for('manage_companies') }}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-building me-2"></i> Companies
+                    </a>
+                    <a href="{{ url_for('manage_applications') }}" class="list-group-item list-group-item-action active">
+                        <i class="fas fa-file-alt me-2"></i> Applications
+                    </a>
+                    <a href="{{ url_for('manage_categories') }}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-tags me-2"></i> Categories
+                    </a>
+                    <a href="{{ url_for('google_analytics_setup') }}" class="list-group-item list-group-item-action">
+                        <i class="fab fa-google me-2"></i> Google Analytics
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Main Content -->
+        <div class="col-lg-10 col-md-9">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1 class="h3 mb-0">Manage Applications</h1>
+            </div>
+            
+            <div class="card shadow-sm mb-4">
+                <div class="card-header py-3 bg-light">
+                    <h6 class="m-0 font-weight-bold">Applications ({{ pagination.total }})</h6>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-hover" id="applicationsTable">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Job Title</th>
+                                    <th>Company</th>
+                                    <th>Applicant</th>
+                                    <th>Status</th>
+                                    <th>Applied Date</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for application, job, user, company in applications %}
+                                <tr>
+                                    <td>{{ application.id }}</td>
+                                    <td>
+                                        <a href="{{ url_for('job_details', job_id=job.id) }}">{{ job.title }}</a>
+                                    </td>
+                                    <td>
+                                        <a href="{{ url_for('company_details', company_id=company.id) }}">{{ company.name }}</a>
+                                    </td>
+                                    <td>{{ user.username }} ({{ user.email }})</td>
+                                    <td>
+                                        <span class="badge {{ 'bg-secondary' if application.status == 'applied' else ('bg-info' if application.status == 'reviewed' else ('bg-warning' if application.status == 'shortlisted' else ('bg-success' if application.status == 'hired' else 'bg-danger'))) }}">
+                                            {{ application.status|capitalize }}
+                                        </span>
+                                    </td>
+                                    <td>{{ format_date(application.applied_date) }}</td>
+                                    <td>
+                                        <div class="dropdown">
+                                            <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" id="dropdownMenuButton{{ application.id }}" data-bs-toggle="dropdown" aria-expanded="false">
+                                                Status
+                                            </button>
+                                            <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton{{ application.id }}">
+                                                <li>
+                                                    <form action="{{ url_for('update_application_status', application_id=application.id) }}" method="post">
+                                                        <input type="hidden" name="status" value="applied">
+                                                        <button type="submit" class="dropdown-item {{ 'active' if application.status == 'applied' else '' }}">Applied</button>
+                                                    </form>
+                                                </li>
+                                                <li>
+                                                    <form action="{{ url_for('update_application_status', application_id=application.id) }}" method="post">
+                                                        <input type="hidden" name="status" value="reviewed">
+                                                        <button type="submit" class="dropdown-item {{ 'active' if application.status == 'reviewed' else '' }}">Reviewed</button>
+                                                    </form>
+                                                </li>
+                                                <li>
+                                                    <form action="{{ url_for('update_application_status', application_id=application.id) }}" method="post">
+                                                        <input type="hidden" name="status" value="shortlisted">
+                                                        <button type="submit" class="dropdown-item {{ 'active' if application.status == 'shortlisted' else '' }}">Shortlisted</button>
+                                                    </form>
+                                                </li>
+                                                <li>
+                                                    <form action="{{ url_for('update_application_status', application_id=application.id) }}" method="post">
+                                                        <input type="hidden" name="status" value="hired">
+                                                        <button type="submit" class="dropdown-item {{ 'active' if application.status == 'hired' else '' }}">Hired</button>
+                                                    </form>
+                                                </li>
+                                                <li>
+                                                    <form action="{{ url_for('update_application_status', application_id=application.id) }}" method="post">
+                                                        <input type="hidden" name="status" value="rejected">
+                                                        <button type="submit" class="dropdown-item {{ 'active' if application.status == 'rejected' else '' }}">Rejected</button>
+                                                    </form>
+                                                </li>
+                                                <li><hr class="dropdown-divider"></li>
+                                                <li>
+                                                    <form action="{{ url_for('delete_application', application_id=application.id) }}" method="post" onsubmit="return confirm('Are you sure you want to delete this application?');">
+                                                        <button type="submit" class="dropdown-item text-danger">Delete</button>
+                                                    </form>
+                                                </li>
+                                            </ul>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialize DataTable for better sorting, searching, and pagination
+        if (typeof $.fn.DataTable !== 'undefined') {
+            $('#applicationsTable').DataTable({
+                "order": [[5, "desc"]], // Sort by application date by default
+                "pageLength": 25,
+                "language": {
+                    "search": "Filter applications:",
+                    "lengthMenu": "Show _MENU_ applications per page",
+                }
+            });
+        }
+    });
+</script>
+{% endblock %}

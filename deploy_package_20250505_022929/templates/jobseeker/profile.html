@@ -1,0 +1,308 @@
+{% extends 'base.html' %}
+
+{% block title %}My Profile - Remote Hive{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <!-- Sidebar -->
+        <div class="col-lg-3">
+            <div class="jobseeker-sidebar card shadow-sm mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Jobseeker Dashboard</h5>
+                </div>
+                <div class="list-group list-group-flush">
+                    <a href="{{ url_for('jobseeker_dashboard') }}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-tachometer-alt me-2"></i> Dashboard
+                    </a>
+                    <a href="{{ url_for('jobseeker_profile') }}" class="list-group-item list-group-item-action active">
+                        <i class="fas fa-user me-2"></i> My Profile
+                    </a>
+                    <a href="{{ url_for('jobseeker_skills') }}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-tools me-2"></i> Skills
+                    </a>
+                    <a href="{{ url_for('jobseeker_applications') }}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-file-alt me-2"></i> My Applications
+                    </a>
+                    <a href="{{ url_for('saved_jobs') }}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-bookmark me-2"></i> Saved Jobs
+                    </a>
+                </div>
+            </div>
+            
+            <!-- Profile Tips -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-light py-3">
+                    <h6 class="m-0 font-weight-bold">Profile Tips</h6>
+                </div>
+                <div class="card-body">
+                    <div class="tip-item mb-3">
+                        <h6 class="mb-1"><i class="fas fa-file-alt text-info me-1"></i> Update Your Resume</h6>
+                        <p class="text-muted small mb-0">Keep your resume current for better job matches.</p>
+                    </div>
+                    <div class="tip-item mb-3">
+                        <h6 class="mb-1"><i class="fas fa-bullseye text-info me-1"></i> Be Specific</h6>
+                        <p class="text-muted small mb-0">Add a clear headline that showcases your expertise.</p>
+                    </div>
+                    <div class="tip-item">
+                        <h6 class="mb-1"><i class="fas fa-dollar-sign text-info me-1"></i> Salary Expectations</h6>
+                        <p class="text-muted small mb-0">Setting realistic salary expectations improves your job matches.</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Skills Summary -->
+            <div class="card shadow-sm">
+                <div class="card-header bg-light py-3 d-flex justify-content-between align-items-center">
+                    <h6 class="m-0 font-weight-bold">My Skills</h6>
+                    <a href="{{ url_for('jobseeker_skills') }}" class="btn btn-sm btn-outline-primary">Manage</a>
+                </div>
+                <div class="card-body">
+                    {% if profile and profile.skills %}
+                        <div class="d-flex flex-wrap gap-1">
+                            {% for skill in profile.skills %}
+                                <span class="badge bg-light text-dark p-2 mb-1">{{ skill.name }}</span>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="text-center py-3">
+                            <i class="fas fa-tools fa-2x text-muted mb-2"></i>
+                            <p class="text-muted mb-2">No skills added yet</p>
+                            <a href="{{ url_for('jobseeker_skills') }}" class="btn btn-sm btn-primary">
+                                Add Skills
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <!-- Main Content -->
+        <div class="col-lg-9">
+            <div class="card shadow-sm">
+                <div class="card-header bg-light py-3">
+                    <h5 class="mb-0">{{ 'Update Your Profile' if profile.full_name else 'Complete Your Profile' }}</h5>
+                </div>
+                <div class="card-body p-4">
+                    <form method="POST" enctype="multipart/form-data">
+                        {{ form.hidden_tag() }}
+                        
+                        <!-- Basic Information -->
+                        <div class="mb-4">
+                            <h5 class="section-title mb-3">Basic Information</h5>
+                            
+                            <div class="row">
+                                <div class="col-md-8">
+                                    <div class="mb-3">
+                                        <label for="full_name" class="form-label">Full Name <span class="text-danger">*</span></label>
+                                        {{ form.full_name(class="form-control", placeholder="Enter your full name") }}
+                                        {% if form.full_name.errors %}
+                                            <div class="invalid-feedback d-block">
+                                                {% for error in form.full_name.errors %}
+                                                    {{ error }}
+                                                {% endfor %}
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <label for="headline" class="form-label">Professional Headline</label>
+                                        {{ form.headline(class="form-control", placeholder="e.g. Full Stack Developer with 5 years of experience") }}
+                                        {% if form.headline.errors %}
+                                            <div class="invalid-feedback d-block">
+                                                {% for error in form.headline.errors %}
+                                                    {{ error }}
+                                                {% endfor %}
+                                            </div>
+                                        {% endif %}
+                                        <div class="form-text">A brief description of your professional identity, visible to employers.</div>
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <label for="phone" class="form-label">Phone Number</label>
+                                        {{ form.phone(class="form-control", placeholder="Enter your phone number") }}
+                                        {% if form.phone.errors %}
+                                            <div class="invalid-feedback d-block">
+                                                {% for error in form.phone.errors %}
+                                                    {{ error }}
+                                                {% endfor %}
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                
+                                <div class="col-md-4">
+                                    <div class="mb-3 text-center">
+                                        <label for="profile_picture" class="form-label d-block">Profile Picture</label>
+                                        <div class="profile-picture-container mx-auto mb-2">
+                                            {% if profile.profile_picture %}
+                                                <img src="{{ url_for('static', filename=profile.profile_picture) }}" alt="Profile Picture" class="profile-picture-preview">
+                                            {% else %}
+                                                <div class="profile-picture-placeholder">
+                                                    <i class="fas fa-user"></i>
+                                                </div>
+                                            {% endif %}
+                                        </div>
+                                        {{ form.profile_picture(class="form-control") }}
+                                        {% if form.profile_picture.errors %}
+                                            <div class="invalid-feedback d-block">
+                                                {% for error in form.profile_picture.errors %}
+                                                    {{ error }}
+                                                {% endfor %}
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Professional Details -->
+                        <div class="mb-4">
+                            <h5 class="section-title mb-3">Professional Details</h5>
+                            
+                            <div class="mb-3">
+                                <label for="summary" class="form-label">Professional Summary</label>
+                                {{ form.summary(class="form-control", rows="5", 
+                                    placeholder="Provide a brief overview of your professional background, key achievements, and career goals") }}
+                                {% if form.summary.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in form.summary.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-4 mb-3">
+                                    <label for="experience_years" class="form-label">Years of Experience</label>
+                                    {{ form.experience_years(class="form-control", placeholder="Enter a number") }}
+                                    {% if form.experience_years.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {% for error in form.experience_years.errors %}
+                                                {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label for="current_salary" class="form-label">Current Salary (Annual in LPA)</label>
+                                    {{ form.current_salary(class="form-control", placeholder="e.g. 8") }}
+                                    {% if form.current_salary.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {% for error in form.current_salary.errors %}
+                                                {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label for="expected_salary" class="form-label">Expected Salary (Annual in LPA)</label>
+                                    {{ form.expected_salary(class="form-control", placeholder="e.g. 12") }}
+                                    {% if form.expected_salary.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {% for error in form.expected_salary.errors %}
+                                                {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Location and Preferences -->
+                        <div class="mb-4">
+                            <h5 class="section-title mb-3">Location and Preferences</h5>
+                            
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="location" class="form-label">Current Location</label>
+                                    {{ form.location(class="form-control", placeholder="e.g. Bangalore, India") }}
+                                    {% if form.location.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {% for error in form.location.errors %}
+                                                {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="remote_preference" class="form-label">Work Type Preference</label>
+                                    {{ form.remote_preference(class="form-select") }}
+                                    {% if form.remote_preference.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {% for error in form.remote_preference.errors %}
+                                                {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Resume Upload -->
+                        <div class="mb-4">
+                            <h5 class="section-title mb-3">Resume</h5>
+                            
+                            <div class="mb-3">
+                                <label for="resume" class="form-label">Upload Resume</label>
+                                <div class="row align-items-center">
+                                    <div class="col-md-9">
+                                        {{ form.resume(class="form-control") }}
+                                        {% if form.resume.errors %}
+                                            <div class="invalid-feedback d-block">
+                                                {% for error in form.resume.errors %}
+                                                    {{ error }}
+                                                {% endfor %}
+                                            </div>
+                                        {% endif %}
+                                        <div class="form-text">Upload your resume (PDF, DOC, or DOCX format). Max size: 5MB</div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        {% if profile.resume_path %}
+                                            <a href="#" class="btn btn-outline-primary btn-sm d-block">
+                                                <i class="fas fa-download me-1"></i> Current Resume
+                                            </a>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <hr class="my-4">
+                        
+                        <div class="d-flex justify-content-between">
+                            <a href="{{ url_for('jobseeker_dashboard') }}" class="btn btn-outline-secondary">Cancel</a>
+                            {{ form.submit(class="btn btn-primary") }}
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Preview profile picture when a new file is selected
+    const profilePictureInput = document.getElementById('profile_picture');
+    if (profilePictureInput) {
+        profilePictureInput.addEventListener('change', function() {
+            const file = this.files[0];
+            if (file) {
+                const reader = new FileReader();
+                const pictureContainer = document.querySelector('.profile-picture-container');
+                
+                reader.onload = function(e) {
+                    pictureContainer.innerHTML = `<img src="${e.target.result}" alt="Profile Picture Preview" class="profile-picture-preview">`;
+                };
+                
+                reader.readAsDataURL(file);
+            }
+        });
+    }
+});
+</script>
+{% endblock %}

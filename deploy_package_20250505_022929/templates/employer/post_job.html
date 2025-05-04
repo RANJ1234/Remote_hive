@@ -1,0 +1,355 @@
+{% extends 'base.html' %}
+
+{% block title %}Post a Job - Remote Hive{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <!-- Sidebar -->
+        <div class="col-lg-3">
+            <div class="employer-sidebar card shadow-sm mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Employer Dashboard</h5>
+                </div>
+                <div class="list-group list-group-flush">
+                    <a href="{{ url_for('employer_dashboard') }}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-tachometer-alt me-2"></i> Dashboard
+                    </a>
+                    <a href="{{ url_for('employer_company_profile') }}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-building me-2"></i> Company Profile
+                    </a>
+                    <a href="{{ url_for('employer_jobs') }}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-briefcase me-2"></i> Manage Jobs
+                    </a>
+                    <a href="{{ url_for('employer_post_job') }}" class="list-group-item list-group-item-action active">
+                        <i class="fas fa-plus-circle me-2"></i> Post New Job
+                    </a>
+                    <a href="{{ url_for('employer_applications') }}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-file-alt me-2"></i> Applications
+                    </a>
+                </div>
+            </div>
+            
+            <!-- Tips Card -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-light py-3">
+                    <h6 class="m-0 font-weight-bold">Tips for Effective Job Postings</h6>
+                </div>
+                <div class="card-body">
+                    <div class="tip-item mb-3">
+                        <h6 class="mb-1"><i class="fas fa-check-circle text-success me-1"></i> Be Specific</h6>
+                        <p class="text-muted small mb-0">Clearly define responsibilities and requirements to attract qualified candidates.</p>
+                    </div>
+                    <div class="tip-item mb-3">
+                        <h6 class="mb-1"><i class="fas fa-check-circle text-success me-1"></i> Include Salary Range</h6>
+                        <p class="text-muted small mb-0">Providing salary details increases application rates and improves candidate quality.</p>
+                    </div>
+                    <div class="tip-item mb-3">
+                        <h6 class="mb-1"><i class="fas fa-check-circle text-success me-1"></i> Highlight Benefits</h6>
+                        <p class="text-muted small mb-0">Mention remote work policies, flexibility, and other perks that make your company attractive.</p>
+                    </div>
+                    <div class="tip-item">
+                        <h6 class="mb-1"><i class="fas fa-check-circle text-success me-1"></i> Use Keywords</h6>
+                        <p class="text-muted small mb-0">Include relevant industry keywords to help candidates find your job listing.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Main Content -->
+        <div class="col-lg-9">
+            <div class="card shadow-sm">
+                <div class="card-header bg-light py-3">
+                    <h5 class="mb-0">{{ 'Edit Job' if job else 'Post a New Job' }}</h5>
+                </div>
+                <div class="card-body p-4">
+                    <form method="POST" enctype="multipart/form-data">
+                        {{ form.hidden_tag() }}
+                        
+                        <!-- Job Basic Details -->
+                        <div class="mb-4">
+                            <h5 class="section-title mb-3">Basic Job Details</h5>
+                            
+                            <div class="mb-3">
+                                <label for="title" class="form-label">Job Title <span class="text-danger">*</span></label>
+                                {{ form.title(class="form-control", placeholder="e.g. Senior Software Engineer, Digital Marketing Manager") }}
+                                {% if form.title.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in form.title.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                                <div class="form-text">Be specific - job titles with 1-3 words get more views.</div>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="job_type" class="form-label">Job Type <span class="text-danger">*</span></label>
+                                    {{ form.job_type(class="form-select") }}
+                                    {% if form.job_type.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {% for error in form.job_type.errors %}
+                                                {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="experience_required" class="form-label">Experience Required</label>
+                                    {{ form.experience_required(class="form-select") }}
+                                    {% if form.experience_required.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {% for error in form.experience_required.errors %}
+                                                {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="location" class="form-label">Location</label>
+                                    {{ form.location(class="form-control", placeholder="e.g. Bangalore, Mumbai, Delhi") }}
+                                    {% if form.location.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {% for error in form.location.errors %}
+                                                {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                    <div class="form-text">Leave blank if location doesn't matter for remote jobs.</div>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="education_required" class="form-label">Education Required</label>
+                                    {{ form.education_required(class="form-control", placeholder="e.g. Bachelor's in Computer Science") }}
+                                    {% if form.education_required.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {% for error in form.education_required.errors %}
+                                                {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="salary_min" class="form-label">Minimum Salary (Annual in LPA)</label>
+                                    {{ form.salary_min(class="form-control", placeholder="e.g. 5") }}
+                                    {% if form.salary_min.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {% for error in form.salary_min.errors %}
+                                                {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="salary_max" class="form-label">Maximum Salary (Annual in LPA)</label>
+                                    {{ form.salary_max(class="form-control", placeholder="e.g. 10") }}
+                                    {% if form.salary_max.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {% for error in form.salary_max.errors %}
+                                                {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="deadline" class="form-label">Application Deadline</label>
+                                    {{ form.deadline(class="form-control", type="date") }}
+                                    {% if form.deadline.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {% for error in form.deadline.errors %}
+                                                {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                <div class="col-md-6 mb-3 d-flex align-items-center">
+                                    <div class="form-check form-switch">
+                                        {{ form.is_remote(class="form-check-input") }}
+                                        <label class="form-check-label" for="is_remote">This is a remote job</label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Job Description -->
+                        <div class="mb-4">
+                            <h5 class="section-title mb-3">Job Description</h5>
+                            
+                            <div class="mb-3">
+                                <label for="description" class="form-label">Job Description <span class="text-danger">*</span></label>
+                                {{ form.description(class="form-control", rows="8", 
+                                    placeholder="Provide a detailed description of the job role, including day-to-day responsibilities, team structure, and company mission.") }}
+                                {% if form.description.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in form.description.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                                <div class="form-text">HTML formatting is supported. Use headers, bullets, and other formatting to make your job post attractive.</div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="requirements" class="form-label">Requirements</label>
+                                {{ form.requirements(class="form-control", rows="6", 
+                                    placeholder="List specific qualifications, skills, and experience required for this position.") }}
+                                {% if form.requirements.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in form.requirements.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <!-- Skills Section -->
+                        <div class="mb-4">
+                            <h5 class="section-title mb-3">Skills Required</h5>
+                            <div id="skills-container" class="mb-3">
+                                <!-- Skills will be added here via JavaScript -->
+                                <div class="form-text mb-2">Select or add skills required for this job.</div>
+                                <div class="skill-tags d-flex flex-wrap gap-2">
+                                </div>
+                            </div>
+                            <div class="input-group mb-3">
+                                <input type="text" id="skill-input" class="form-control" placeholder="Add a skill (e.g., JavaScript, Product Management)">
+                                <button class="btn btn-outline-primary" type="button" id="add-skill-btn">Add</button>
+                            </div>
+                            <input type="hidden" id="skills-data" name="skills" value="">
+                        </div>
+                        
+                        <hr class="my-4">
+                        
+                        <div class="d-flex justify-content-between">
+                            <a href="{{ url_for('employer_jobs') }}" class="btn btn-outline-secondary">Cancel</a>
+                            {{ form.submit(class="btn btn-primary") }}
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Skills management
+    const skillInput = document.getElementById('skill-input');
+    const addSkillBtn = document.getElementById('add-skill-btn');
+    const skillsContainer = document.querySelector('.skill-tags');
+    const skillsDataInput = document.getElementById('skills-data');
+    
+    // Sample common skills - in a real app, this could come from the backend
+    const commonSkills = [
+        'JavaScript', 'Python', 'Java', 'React', 'Angular', 'Vue.js', 'Node.js', 'Django', 
+        'Flask', 'SQL', 'MongoDB', 'AWS', 'DevOps', 'Product Management', 'UI/UX Design', 
+        'Digital Marketing', 'Project Management', 'Agile', 'Scrum', 'Machine Learning',
+        'Data Science', 'Communication', 'Leadership'
+    ];
+    
+    // Populate some common skills
+    commonSkills.forEach(skill => {
+        const skillBadge = document.createElement('div');
+        skillBadge.className = 'badge bg-light text-dark p-2 skill-option';
+        skillBadge.textContent = skill;
+        skillBadge.addEventListener('click', function() {
+            addSkill(skill);
+            this.classList.add('d-none');
+        });
+        skillsContainer.appendChild(skillBadge);
+    });
+    
+    // Initialize with existing skills if editing
+    {% if job and job.skills %}
+        {% for skill in job.skills %}
+            addSkill('{{ skill.name }}');
+            // Hide from common skills
+            document.querySelectorAll('.skill-option').forEach(option => {
+                if (option.textContent === '{{ skill.name }}') {
+                    option.classList.add('d-none');
+                }
+            });
+        {% endfor %}
+    {% endif %}
+    
+    // Add skill when button is clicked
+    addSkillBtn.addEventListener('click', function() {
+        const skillName = skillInput.value.trim();
+        if (skillName) {
+            addSkill(skillName);
+            skillInput.value = '';
+            
+            // Hide from common skills if it exists
+            document.querySelectorAll('.skill-option').forEach(option => {
+                if (option.textContent === skillName) {
+                    option.classList.add('d-none');
+                }
+            });
+        }
+    });
+    
+    // Add skill when Enter is pressed
+    skillInput.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            addSkillBtn.click();
+        }
+    });
+    
+    function addSkill(skillName) {
+        // Check if skill already exists
+        if (document.querySelector(`.skill-tag[data-skill="${skillName}"]`)) {
+            return;
+        }
+        
+        const skillTag = document.createElement('div');
+        skillTag.className = 'skill-tag badge bg-primary p-2 d-flex align-items-center';
+        skillTag.setAttribute('data-skill', skillName);
+        
+        const skillText = document.createElement('span');
+        skillText.textContent = skillName;
+        
+        const removeBtn = document.createElement('button');
+        removeBtn.className = 'btn-close btn-close-white ms-2 btn-sm';
+        removeBtn.style.fontSize = '0.7rem';
+        removeBtn.addEventListener('click', function() {
+            skillTag.remove();
+            updateSkillsData();
+            
+            // Show in common skills if it exists
+            document.querySelectorAll('.skill-option').forEach(option => {
+                if (option.textContent === skillName) {
+                    option.classList.remove('d-none');
+                }
+            });
+        });
+        
+        skillTag.appendChild(skillText);
+        skillTag.appendChild(removeBtn);
+        skillsContainer.appendChild(skillTag);
+        
+        updateSkillsData();
+    }
+    
+    function updateSkillsData() {
+        const skills = [];
+        document.querySelectorAll('.skill-tag').forEach(tag => {
+            skills.push(tag.getAttribute('data-skill'));
+        });
+        skillsDataInput.value = JSON.stringify(skills);
+    }
+});
+</script>
+{% endblock %}

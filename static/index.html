@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Remote Hive - Static Page</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+            color: #333;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f9f9f9;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #2c3e50;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 10px;
+        }
+        .info {
+            background-color: #e8f4f8;
+            padding: 15px;
+            border-left: 4px solid #3498db;
+            margin-bottom: 20px;
+        }
+        .links {
+            margin-top: 30px;
+        }
+        .links a {
+            display: inline-block;
+            margin-right: 15px;
+            color: #3498db;
+            text-decoration: none;
+        }
+        .links a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Remote Hive - Static Page</h1>
+        
+        <div class="info">
+            <p>This is a static HTML page that is served directly by the web server, bypassing the PHP wrapper.</p>
+            <p>If you can see this page, it means that static file serving is working correctly.</p>
+        </div>
+        
+        <h2>About Remote Hive</h2>
+        <p>Remote Hive is a platform connecting remote workers with job opportunities around the world. Our mission is to make remote work accessible to everyone, regardless of location.</p>
+        
+        <h2>Testing the PHP Wrapper</h2>
+        <p>The PHP wrapper is designed to proxy requests to a Flask application hosted elsewhere. This allows you to run your Python/Flask application on a PHP hosting environment.</p>
+        
+        <div class="links">
+            <a href="/">Go to Home Page</a>
+            <a href="/test.php">Run Tests</a>
+            <a href="/?test=true">Check Configuration</a>
+            <a href="/phpinfo.php">PHP Information</a>
+        </div>
+    </div>
+</body>
+</html>

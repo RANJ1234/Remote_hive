@@ -1,0 +1,241 @@
+{% extends 'base.html' %}
+
+{% block title %}Manage Companies - Admin | Remote Hive{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="row">
+        <!-- Sidebar -->
+        <div class="col-lg-2 col-md-3">
+            <div class="admin-sidebar card shadow-sm mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Admin Panel</h5>
+                </div>
+                <div class="list-group list-group-flush">
+                    <a href="{{ url_for('admin_dashboard') }}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-tachometer-alt me-2"></i> Dashboard
+                    </a>
+                    <a href="{{ url_for('manage_users') }}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-users me-2"></i> Users
+                    </a>
+                    <a href="{{ url_for('manage_jobs') }}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-briefcase me-2"></i> Jobs
+                    </a>
+                    <a href="{{ url_for('manage_companies') }}" class="list-group-item list-group-item-action active">
+                        <i class="fas fa-building me-2"></i> Companies
+                    </a>
+                    <a href="{{ url_for('manage_applications') }}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-file-alt me-2"></i> Applications
+                    </a>
+                    <a href="{{ url_for('manage_categories') }}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-tags me-2"></i> Categories
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="col-lg-10 col-md-9">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1 class="h3 mb-0">Manage Companies</h1>
+                <a href="{{ url_for('add_company') }}" class="btn btn-primary">
+                    <i class="fas fa-plus me-1"></i> Add Company
+                </a>
+            </div>
+
+            <!-- Filters and Search -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-body">
+                    <form action="{{ url_for('manage_companies') }}" method="get" class="row g-3">
+                        <div class="col-md-3">
+                            <div class="input-group">
+                                <span class="input-group-text bg-white">
+                                    <i class="fas fa-search"></i>
+                                </span>
+                                <input type="text" class="form-control" name="search" placeholder="Search companies..." value="{{ request.args.get('search', '') }}">
+                            </div>
+                        </div>
+                        <div class="col-md-2">
+                            <select class="form-select" name="industry">
+                                <option value="">All Industries</option>
+                                <option value="Technology" {% if request.args.get('industry') == 'Technology' %}selected{% endif %}>Technology</option>
+                                <option value="Healthcare" {% if request.args.get('industry') == 'Healthcare' %}selected{% endif %}>Healthcare</option>
+                                <option value="Finance" {% if request.args.get('industry') == 'Finance' %}selected{% endif %}>Finance</option>
+                                <option value="Education" {% if request.args.get('industry') == 'Education' %}selected{% endif %}>Education</option>
+                                <option value="Retail" {% if request.args.get('industry') == 'Retail' %}selected{% endif %}>Retail</option>
+                                <option value="Manufacturing" {% if request.args.get('industry') == 'Manufacturing' %}selected{% endif %}>Manufacturing</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <select class="form-select" name="company_type">
+                                <option value="">All Types</option>
+                                <option value="MNC" {% if request.args.get('company_type') == 'MNC' %}selected{% endif %}>MNC</option>
+                                <option value="Startup" {% if request.args.get('company_type') == 'Startup' %}selected{% endif %}>Startup</option>
+                                <option value="Product" {% if request.args.get('company_type') == 'Product' %}selected{% endif %}>Product</option>
+                                <option value="Service" {% if request.args.get('company_type') == 'Service' %}selected{% endif %}>Service</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <select class="form-select" name="featured">
+                                <option value="">All Status</option>
+                                <option value="featured" {% if request.args.get('featured') == 'featured' %}selected{% endif %}>Featured Only</option>
+                                <option value="regular" {% if request.args.get('featured') == 'regular' %}selected{% endif %}>Regular Only</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="d-flex">
+                                <button type="submit" class="btn btn-primary me-2 flex-grow-1">Filter</button>
+                                <a href="{{ url_for('manage_companies') }}" class="btn btn-outline-secondary">
+                                    <i class="fas fa-redo"></i>
+                                </a>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Companies Table -->
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-hover align-middle">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Company</th>
+                                    <th>Owner</th>
+                                    <th>Industry</th>
+                                    <th>Type</th>
+                                    <th>Size</th>
+                                    <th>Jobs</th>
+                                    <th>Featured</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for company in companies.items %}
+                                    <tr>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                {% if company.logo_path %}
+                                                    <img src="{{ url_for('static', filename=company.logo_path) }}" alt="{{ company.name }}" class="company-table-logo me-2">
+                                                {% else %}
+                                                    <div class="placeholder-logo small me-2">{{ company.name[0] }}</div>
+                                                {% endif %}
+                                                <div>
+                                                    <a href="{{ url_for('company_details', company_id=company.id) }}" target="_blank">{{ company.name }}</a>
+                                                    {% if company.rating > 0 %}
+                                                        <div class="small text-muted">
+                                                            <i class="fas fa-star text-warning"></i> {{ company.rating|round(1) }}
+                                                            ({{ company.review_count }} reviews)
+                                                        </div>
+                                                    {% endif %}
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>{{ company.user.email }}</td>
+                                        <td>{{ company.industry or 'N/A' }}</td>
+                                        <td>{{ company.company_type or 'N/A' }}</td>
+                                        <td>{{ company.company_size or 'N/A' }}</td>
+                                        <td>{{ Job.objects(company=company).count() }}</td>
+                                        <td>
+                                            <span class="badge bg-{{ 'warning' if company.is_featured else 'light text-dark' }}">
+                                                {{ 'Featured' if company.is_featured else 'Regular' }}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <div class="btn-group">
+                                                <a href="{{ url_for('edit_company', company_id=company.id) }}" class="btn btn-sm btn-outline-primary">
+                                                    <i class="fas fa-edit"></i>
+                                                </a>
+                                                <form action="{{ url_for('toggle_company_featured', company_id=company.id) }}" method="post" class="d-inline">
+                                                    <button type="submit" class="btn btn-sm btn-outline-{{ 'warning' if not company.is_featured else 'secondary' }}">
+                                                        <i class="fas fa-{{ 'star' if not company.is_featured else 'star-half-alt' }}"></i>
+                                                    </button>
+                                                </form>
+                                                <button type="button" class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteCompanyModal-{{ company.id }}">
+                                                    <i class="fas fa-trash-alt"></i>
+                                                </button>
+                                            </div>
+
+                                            <!-- Delete Modal -->
+                                            <div class="modal fade" id="deleteCompanyModal-{{ company.id }}" tabindex="-1" aria-hidden="true">
+                                                <div class="modal-dialog">
+                                                    <div class="modal-content">
+                                                        <div class="modal-header">
+                                                            <h5 class="modal-title">Confirm Deletion</h5>
+                                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                        </div>
+                                                        <div class="modal-body">
+                                                            <p>Are you sure you want to delete the company <strong>{{ company.name }}</strong>?</p>
+                                                            <p class="text-danger">This action cannot be undone and will delete all associated jobs and applications.</p>
+                                                        </div>
+                                                        <div class="modal-footer">
+                                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                                            <form action="{{ url_for('delete_company', company_id=company.id) }}" method="post">
+                                                                <button type="submit" class="btn btn-danger">Delete Company</button>
+                                                            </form>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Pagination -->
+                    {% if companies.pages > 1 %}
+                        <nav aria-label="Company pagination" class="mt-4">
+                            <ul class="pagination justify-content-center">
+                                {% if companies.has_prev %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="{{ url_for('manage_companies', page=companies.prev_num) }}" aria-label="Previous">
+                                            <span aria-hidden="true">&laquo;</span>
+                                        </a>
+                                    </li>
+                                {% else %}
+                                    <li class="page-item disabled">
+                                        <span class="page-link" aria-hidden="true">&laquo;</span>
+                                    </li>
+                                {% endif %}
+
+                                {% for page_num in companies.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
+                                    {% if page_num %}
+                                        {% if page_num == companies.page %}
+                                            <li class="page-item active">
+                                                <span class="page-link">{{ page_num }}</span>
+                                            </li>
+                                        {% else %}
+                                            <li class="page-item">
+                                                <a class="page-link" href="{{ url_for('manage_companies', page=page_num) }}">{{ page_num }}</a>
+                                            </li>
+                                        {% endif %}
+                                    {% else %}
+                                        <li class="page-item disabled">
+                                            <span class="page-link">...</span>
+                                        </li>
+                                    {% endif %}
+                                {% endfor %}
+
+                                {% if companies.has_next %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="{{ url_for('manage_companies', page=companies.next_num) }}" aria-label="Next">
+                                            <span aria-hidden="true">&raquo;</span>
+                                        </a>
+                                    </li>
+                                {% else %}
+                                    <li class="page-item disabled">
+                                        <span class="page-link" aria-hidden="true">&raquo;</span>
+                                    </li>
+                                {% endif %}
+                            </ul>
+                        </nav>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

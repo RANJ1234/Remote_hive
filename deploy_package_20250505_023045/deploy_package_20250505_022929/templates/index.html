@@ -1,0 +1,282 @@
+{% extends 'base.html' %}
+
+{% block title %}Remote Hive - Find Your Dream Remote Job{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero-section">
+    <div class="container py-5">
+        <div class="row">
+            <div class="col-lg-6 my-auto">
+                <h1 class="display-4 fw-bold">Find your dream job now</h1>
+                <p class="lead mb-4">5 lakh+ jobs for you to explore</p>
+
+                <!-- Search Form -->
+                <div class="search-box p-3 bg-white rounded shadow-sm">
+                    <form action="{{ url_for('search') }}" method="get">
+                        <div class="row g-2">
+                            <div class="col-md-5">
+                                <div class="input-group">
+                                    <span class="input-group-text bg-transparent border-0">
+                                        <i class="fas fa-search"></i>
+                                    </span>
+                                    <input type="text" class="form-control border-0" name="query" placeholder="Skills, designations, companies" required>
+                                </div>
+                            </div>
+                            <div class="col-md-5">
+                                <div class="input-group">
+                                    <span class="input-group-text bg-transparent border-0">
+                                        <i class="fas fa-map-marker-alt"></i>
+                                    </span>
+                                    <input type="text" class="form-control border-0" name="location" placeholder="Location">
+                                </div>
+                            </div>
+                            <div class="col-md-2">
+                                <button type="submit" class="btn btn-primary w-100">Search</button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Trending Search Tags -->
+                <div class="trending-tags mt-4">
+                    <h6 class="text-muted">Trending Searches:</h6>
+                    <div class="d-flex flex-wrap gap-2 mt-2">
+                        <a href="{{ url_for('search', query='remote') }}" class="tag-item">
+                            <i class="fas fa-laptop-house me-1"></i> Remote
+                        </a>
+                        <a href="{{ url_for('search', query='data science') }}" class="tag-item">
+                            <i class="fas fa-chart-bar me-1"></i> Data Science
+                        </a>
+                        <a href="{{ url_for('search', query='full stack developer') }}" class="tag-item">
+                            <i class="fas fa-code me-1"></i> Full Stack Developer
+                        </a>
+                        <a href="{{ url_for('search', query='Machine Learning') }}" class="tag-item">
+                            <i class="fas fa-robot me-1"></i> Machine Learning
+                        </a>
+                        <a href="{{ url_for('search', query='software engineer') }}" class="tag-item">
+                            <i class="fas fa-laptop-code me-1"></i> Software Engineer
+                        </a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-6 d-none d-lg-block">
+                <div class="hero-image text-center">
+                    <svg width="450" height="350" viewBox="0 0 800 600" xmlns="http://www.w3.org/2000/svg">
+                        <rect x="0" y="0" width="800" height="600" fill="#f8f9fa" />
+                        <text x="400" y="300" font-family="Arial" font-size="30" text-anchor="middle">Remote Work Illustration</text>
+                    </svg>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Top Companies Section -->
+<section class="top-companies py-5 bg-light">
+    <div class="container">
+        <h2 class="section-title mb-4">Top companies hiring now</h2>
+
+        <div class="row">
+            {% for category in company_categories %}
+            <div class="col-lg-3 col-md-4 col-sm-6 mb-3">
+                <a href="{{ url_for('companies', category_id=category.id) }}" class="category-card">
+                    <div class="card h-100 border-0 shadow-sm">
+                        <div class="card-body">
+                            <h5 class="card-title">{{ category.name }}</h5>
+                            <p class="card-text text-muted">{{ category.active_companies_count or '100+' }} are actively hiring</p>
+                            <i class="fas fa-arrow-right text-primary"></i>
+                        </div>
+                    </div>
+                </a>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+<!-- Featured Companies Section -->
+<section class="featured-companies py-5">
+    <div class="container">
+        <h2 class="section-title mb-4">Featured companies actively hiring</h2>
+
+        <div class="row">
+            {% for company in featured_companies %}
+            <div class="col-lg-3 col-md-4 col-sm-6 mb-4">
+                <div class="card h-100 company-card shadow-sm">
+                    <div class="company-logo text-center pt-3">
+                        {% if company.logo_path %}
+                        <img src="{{ url_for('static', filename=company.logo_path) }}" alt="{{ company.name }}" class="img-fluid" style="max-height: 80px;">
+                        {% else %}
+                        <div class="placeholder-logo">{{ company.name[0] }}</div>
+                        {% endif %}
+                    </div>
+                    <div class="card-body">
+                        <h5 class="card-title">{{ company.name }}</h5>
+                        {% if company.rating > 0 %}
+                        <div class="company-rating">
+                            <span class="rating-stars">
+                                {% for i in range(5) %}
+                                    {% if i < company.rating|int %}
+                                        <i class="fas fa-star text-warning"></i>
+                                    {% elif i < company.rating|round(0, 'ceil') %}
+                                        <i class="fas fa-star-half-alt text-warning"></i>
+                                    {% else %}
+                                        <i class="far fa-star text-warning"></i>
+                                    {% endif %}
+                                {% endfor %}
+                            </span>
+                            <span class="rating-text">{{ company.rating|round(1) }}
+                                {% if company.review_count > 0 %}
+                                ({{ company.review_count }} reviews)
+                                {% endif %}
+                            </span>
+                        </div>
+                        {% endif %}
+                        <p class="card-text company-description">{{ company.description|truncate(100) }}</p>
+                    </div>
+                    <div class="card-footer bg-transparent border-0 pb-3">
+                        <a href="{{ url_for('company_details', company_id=company.id|string) }}" class="btn btn-outline-primary">View Jobs</a>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <div class="text-center mt-4">
+            <a href="{{ url_for('companies') }}" class="btn btn-primary">View All Companies</a>
+        </div>
+    </div>
+</section>
+
+<!-- Recent Jobs Section -->
+<section class="recent-jobs py-5 bg-light">
+    <div class="container">
+        <h2 class="section-title mb-4">Recent job postings</h2>
+
+        <div class="row">
+            {% for job in recent_jobs %}
+            <div class="col-lg-6 mb-4">
+                <div class="card job-card shadow-sm h-100">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <h5 class="card-title">{{ job.title }}</h5>
+                                <h6 class="card-subtitle mb-2 text-muted">{{ job.company.name }}</h6>
+                            </div>
+                            <div class="job-logo">
+                                {% if job.company.logo_path %}
+                                <img src="{{ url_for('static', filename=job.company.logo_path) }}" alt="{{ job.company.name }}" class="img-fluid" style="max-height: 50px;">
+                                {% else %}
+                                <div class="placeholder-logo small">{{ job.company.name[0] }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="job-details mt-3">
+                            <div class="row">
+                                <div class="col-md-6 mb-2">
+                                    <i class="fas fa-map-marker-alt text-muted me-2"></i>
+                                    {% if job.is_remote %}
+                                    Remote{% if job.location %} / {{ job.location }}{% endif %}
+                                    {% else %}
+                                    {{ job.location }}
+                                    {% endif %}
+                                </div>
+                                <div class="col-md-6 mb-2">
+                                    <i class="fas fa-briefcase text-muted me-2"></i>
+                                    {{ job.experience_required }}
+                                </div>
+                                <div class="col-md-6 mb-2">
+                                    <i class="fas fa-rupee-sign text-muted me-2"></i>
+                                    {% if job.salary_min and job.salary_max %}
+                                    {{ job.salary_min }}-{{ job.salary_max }} LPA
+                                    {% else %}
+                                    Not disclosed
+                                    {% endif %}
+                                </div>
+                                <div class="col-md-6 mb-2">
+                                    <i class="fas fa-clock text-muted me-2"></i>
+                                    Posted {{ time_since(job.posted_date) }}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-footer bg-transparent">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="badge bg-{{ 'primary' if job.job_type == 'Full-time' else 'secondary' }}">{{ job.job_type }}</span>
+                            <a href="{{ url_for('job_details', job_id=job.id|string) }}" class="btn btn-sm btn-outline-primary">View Details</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <div class="text-center mt-4">
+            <a href="{{ url_for('jobs') }}" class="btn btn-primary">Browse All Jobs</a>
+        </div>
+    </div>
+</section>
+
+<!-- Why Choose Us Section -->
+<section class="why-choose-us py-5">
+    <div class="container">
+        <h2 class="section-title text-center mb-5">Why choose Remote Hive?</h2>
+
+        <div class="row text-center">
+            <div class="col-md-4 mb-4">
+                <div class="feature-box p-4">
+                    <div class="feature-icon mb-3">
+                        <i class="fas fa-search fa-3x text-primary"></i>
+                    </div>
+                    <h4>Extensive Job Database</h4>
+                    <p class="text-muted">Access thousands of remote job opportunities from top companies worldwide.</p>
+                </div>
+            </div>
+            <div class="col-md-4 mb-4">
+                <div class="feature-box p-4">
+                    <div class="feature-icon mb-3">
+                        <i class="fas fa-laptop-house fa-3x text-primary"></i>
+                    </div>
+                    <h4>Remote Work Focused</h4>
+                    <p class="text-muted">Specialized in remote and flexible work opportunities across industries.</p>
+                </div>
+            </div>
+            <div class="col-md-4 mb-4">
+                <div class="feature-box p-4">
+                    <div class="feature-icon mb-3">
+                        <i class="fas fa-users fa-3x text-primary"></i>
+                    </div>
+                    <h4>Employer Network</h4>
+                    <p class="text-muted">Connect with employers looking specifically for remote talent like you.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Job Seeker/Employer CTA Section -->
+<section class="cta-section py-5 bg-primary text-white">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-md-6 mb-4 mb-md-0">
+                <h3>Looking for jobs?</h3>
+                <p>Create an account to find the best remote opportunities tailored to your skills.</p>
+                <a href="{{ url_for('register') }}" class="btn btn-light">Sign Up as Job Seeker</a>
+            </div>
+            <div class="col-md-6">
+                <h3>Hiring remote talent?</h3>
+                <p>Post jobs and find qualified candidates from our pool of remote professionals.</p>
+                <a href="{{ url_for('register') }}" class="btn btn-light">Sign Up as Employer</a>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Any index-specific JavaScript can go here
+</script>
+{% endblock %}

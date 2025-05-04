@@ -1,0 +1,160 @@
+{% extends 'base.html' %}
+
+{% block title %}Google Analytics Setup - Remote Hive Admin{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="row">
+        <!-- Sidebar -->
+        <div class="col-lg-2 col-md-3">
+            <div class="admin-sidebar card shadow-sm mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Admin Panel</h5>
+                </div>
+                <div class="list-group list-group-flush">
+                    <a href="{{ url_for('admin_dashboard') }}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-tachometer-alt me-2"></i> Dashboard
+                    </a>
+                    <a href="{{ url_for('analytics_dashboard') }}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-chart-line me-2"></i> Analytics
+                    </a>
+                    <a href="{{ url_for('job_scraper') }}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-spider me-2"></i> Job Scraper
+                    </a>
+                    <a href="{{ url_for('manage_users') }}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-users me-2"></i> Users
+                    </a>
+                    <a href="{{ url_for('manage_jobs') }}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-briefcase me-2"></i> Jobs
+                    </a>
+                    <a href="{{ url_for('manage_companies') }}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-building me-2"></i> Companies
+                    </a>
+                    <a href="{{ url_for('manage_applications') }}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-file-alt me-2"></i> Applications
+                    </a>
+                    <a href="{{ url_for('manage_categories') }}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-tags me-2"></i> Categories
+                    </a>
+                    <a href="{{ url_for('google_analytics_setup') }}" class="list-group-item list-group-item-action active">
+                        <i class="fab fa-google me-2"></i> Google Analytics
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Main Content -->
+        <div class="col-lg-10 col-md-9">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1 class="h3 mb-0">Google Analytics Setup</h1>
+            </div>
+            
+            <div class="row">
+                <div class="col-lg-6">
+                    <div class="card shadow-sm mb-4">
+                        <div class="card-header py-3 bg-light">
+                            <h6 class="m-0 font-weight-bold">Google Analytics Configuration</h6>
+                        </div>
+                        <div class="card-body">
+                            <form action="{{ url_for('save_google_analytics') }}" method="post">
+                                <div class="mb-3">
+                                    <label for="tracking_id" class="form-label">Tracking ID (Measurement ID)</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text"><i class="fab fa-google"></i></span>
+                                        <input type="text" class="form-control" id="tracking_id" name="tracking_id" placeholder="G-XXXXXXXXXX or UA-XXXXXXXX-X" required>
+                                    </div>
+                                    <div class="form-text">Enter your Google Analytics 4 Measurement ID (G-XXXXXXXXXX) or Universal Analytics Tracking ID (UA-XXXXXXXX-X)</div>
+                                </div>
+                                
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-save me-2"></i>Save Tracking ID
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-lg-6">
+                    <div class="card shadow-sm mb-4">
+                        <div class="card-header py-3 bg-light">
+                            <h6 class="m-0 font-weight-bold">Setup Instructions</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="alert alert-info">
+                                <h5><i class="fas fa-info-circle me-2"></i>How to set up Google Analytics</h5>
+                                <ol class="mb-0">
+                                    <li>Go to <a href="https://analytics.google.com" target="_blank">Google Analytics</a></li>
+                                    <li>Create a new Analytics account (if needed)</li>
+                                    <li>Create a new property for your website</li>
+                                    <li>Complete the setup to get your Measurement ID</li>
+                                    <li>Copy the ID and paste it in the form on the left</li>
+                                    <li>Click "Save Tracking ID"</li>
+                                </ol>
+                            </div>
+                            
+                            <div class="alert alert-warning mt-3">
+                                <h5><i class="fas fa-exclamation-triangle me-2"></i>Important Notes</h5>
+                                <ul class="mb-0">
+                                    <li>For Google Analytics 4, the ID starts with "G-"</li>
+                                    <li>For Universal Analytics, the ID starts with "UA-"</li>
+                                    <li>It can take up to 24 hours for data to start appearing in your Google Analytics account</li>
+                                    <li>Make sure you comply with privacy laws (GDPR, CCPA) when using analytics</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="row">
+                <div class="col-12">
+                    <div class="card shadow-sm">
+                        <div class="card-header py-3 bg-light">
+                            <h6 class="m-0 font-weight-bold">Tracking Status</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-4 mb-3">
+                                    <div class="card border-0 bg-light">
+                                        <div class="card-body text-center">
+                                            <div class="mb-3">
+                                                <i class="fas fa-code fa-3x text-primary"></i>
+                                            </div>
+                                            <h5>Tracking Code</h5>
+                                            <p class="mb-0 text-success"><i class="fas fa-check-circle me-2"></i>Installed on all pages</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="col-md-4 mb-3">
+                                    <div class="card border-0 bg-light">
+                                        <div class="card-body text-center">
+                                            <div class="mb-3">
+                                                <i class="fas fa-user-check fa-3x text-primary"></i>
+                                            </div>
+                                            <h5>User Tracking</h5>
+                                            <p class="mb-0 text-success"><i class="fas fa-check-circle me-2"></i>Tracking user interactions</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="col-md-4 mb-3">
+                                    <div class="card border-0 bg-light">
+                                        <div class="card-body text-center">
+                                            <div class="mb-3">
+                                                <i class="fas fa-funnel-dollar fa-3x text-primary"></i>
+                                            </div>
+                                            <h5>Conversion Events</h5>
+                                            <p class="mb-0 text-success"><i class="fas fa-check-circle me-2"></i>Tracking key conversions</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

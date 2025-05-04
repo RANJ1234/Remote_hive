@@ -1,0 +1,11 @@
+User-agent: *
+Allow: /
+Disallow: /admin/
+Disallow: /employer/dashboard
+Disallow: /employer/jobs
+Disallow: /employer/applications
+Disallow: /jobseeker/dashboard
+Disallow: /jobseeker/profile
+Disallow: /jobseeker/applications
+
+Sitemap: https://yourdomain.com/sitemap.xml

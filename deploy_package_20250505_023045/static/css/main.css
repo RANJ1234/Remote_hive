@@ -1,0 +1,636 @@
+/* Main CSS File for Remote Hive */
+
+/* Global Styles */
+:root {
+    --primary-color: #4a6cf7;
+    --primary-light: #eaedfe; 
+    --secondary-color: #6c757d;
+    --success-color: #13C296;
+    --danger-color: #dc3545;
+    --warning-color: #FBB040;
+    --info-color: #3abaf4;
+    --light-color: #f8f9fa;
+    --dark-color: #090E34;
+    --body-bg: #f9fbfe;
+    --body-color: #212529;
+    --border-radius: 0.5rem;
+    --box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+    --card-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+    --transition: all 0.3s ease;
+}
+
+body {
+    font-family: 'Poppins', sans-serif;
+    background-color: var(--body-bg);
+    color: var(--body-color);
+    line-height: 1.6;
+    overflow-x: hidden;
+}
+
+/* Utility Classes */
+.section-title {
+    position: relative;
+    color: var(--primary-color);
+    font-weight: 600;
+    padding-bottom: 0.5rem;
+}
+
+.section-title:after {
+    content: '';
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    width: 50px;
+    height: 3px;
+    background-color: var(--primary-color);
+}
+
+/* Header & Navigation */
+.navbar {
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.navbar-brand img {
+    max-height: 40px;
+}
+
+.nav-link {
+    font-weight: 500;
+}
+
+/* Hero Section */
+.hero-section {
+    background-color: #fff;
+    padding: 3rem 0;
+    position: relative;
+    overflow: hidden;
+}
+
+.hero-section::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    background-image: linear-gradient(to bottom right, rgba(0, 98, 204, 0.05), rgba(0, 98, 204, 0.1));
+    z-index: 0;
+}
+
+.hero-section .container {
+    position: relative;
+    z-index: 1;
+}
+
+.search-box {
+    background-color: #fff;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+    border-radius: var(--border-radius);
+}
+
+.trending-tags .tag-item {
+    display: inline-flex;
+    align-items: center;
+    background-color: #fff;
+    color: var(--dark-color);
+    border: 1px solid #dee2e6;
+    border-radius: 50px;
+    padding: 0.5rem 1rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    text-decoration: none;
+    transition: all 0.2s ease;
+}
+
+.trending-tags .tag-item:hover {
+    background-color: var(--primary-color);
+    color: #fff;
+    border-color: var(--primary-color);
+}
+
+/* Job Cards */
+.job-card {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    border: none;
+}
+
+.job-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+}
+
+.job-title-link {
+    color: var(--dark-color);
+    text-decoration: none;
+    font-weight: 600;
+}
+
+.job-title-link:hover {
+    color: var(--primary-color);
+}
+
+.company-link {
+    color: var(--secondary-color);
+    text-decoration: none;
+}
+
+.company-link:hover {
+    color: var(--primary-color);
+    text-decoration: underline;
+}
+
+/* Company Cards */
+.company-card {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    border: none;
+}
+
+.company-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+}
+
+.company-logo-large {
+    max-height: 100px;
+    max-width: 100%;
+}
+
+.company-logo-md {
+    max-height: 80px;
+    max-width: 100%;
+}
+
+.company-description {
+    font-size: 0.9rem;
+    color: var(--secondary-color);
+}
+
+.placeholder-logo {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: var(--primary-color);
+    color: #fff;
+    font-size: 2rem;
+    font-weight: 700;
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    margin: 0 auto;
+}
+
+.placeholder-logo.small {
+    width: 40px;
+    height: 40px;
+    font-size: 1.2rem;
+}
+
+.placeholder-logo.large {
+    width: 120px;
+    height: 120px;
+    font-size: 3rem;
+}
+
+.company-rating .rating-stars {
+    color: var(--warning-color);
+}
+
+.company-rating .rating-text {
+    font-size: 0.875rem;
+    color: var(--secondary-color);
+}
+
+.category-card {
+    display: block;
+    text-decoration: none;
+    color: inherit;
+    transition: transform 0.2s ease;
+}
+
+.category-card:hover {
+    transform: translateY(-5px);
+}
+
+.category-card .card {
+    height: 100%;
+    transition: box-shadow 0.2s ease;
+}
+
+.category-card:hover .card {
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+}
+
+/* Categories Navigation */
+.scrollable-tabs {
+    display: flex;
+    overflow-x: auto;
+    white-space: nowrap;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none; /* Firefox */
+    padding-bottom: 5px;
+}
+
+.scrollable-tabs::-webkit-scrollbar {
+    display: none; /* Chrome, Safari, Opera */
+}
+
+.category-tab {
+    display: inline-block;
+    padding: 0.5rem 1rem;
+    margin-right: 0.5rem;
+    border-radius: 50px;
+    background-color: #fff;
+    color: var(--dark-color);
+    text-decoration: none;
+    border: 1px solid #dee2e6;
+    transition: all 0.2s ease;
+}
+
+.category-tab:hover {
+    background-color: var(--light-color);
+}
+
+.category-tab.active {
+    background-color: var(--primary-color);
+    color: #fff;
+    border-color: var(--primary-color);
+}
+
+/* Job Details Page */
+.job-highlight {
+    display: flex;
+    align-items: center;
+}
+
+.job-skills .badge {
+    font-weight: 500;
+}
+
+.similar-job-item:last-child {
+    border-bottom: none !important;
+    margin-bottom: 0 !important;
+    padding-bottom: 0 !important;
+}
+
+/* Company Details Page */
+.company-info-item i {
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: rgba(0, 98, 204, 0.1);
+    border-radius: 50%;
+}
+
+.company-header .company-meta-item {
+    font-size: 0.9rem;
+}
+
+.review-item:last-child {
+    border-bottom: none !important;
+}
+
+/* Forms */
+.form-control:focus, .form-select:focus {
+    border-color: rgba(0, 98, 204, 0.5);
+    box-shadow: 0 0 0 0.25rem rgba(0, 98, 204, 0.25);
+}
+
+.user-type-card {
+    cursor: pointer;
+    transition: border-color 0.2s ease;
+}
+
+.user-type-label {
+    cursor: pointer;
+    width: 100%;
+}
+
+.user-type-card.border-primary {
+    border-width: 2px !important;
+}
+
+/* Admin Dashboard */
+.admin-sidebar .list-group-item.active {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+.border-left-primary {
+    border-left: 4px solid var(--primary-color);
+}
+
+.border-left-success {
+    border-left: 4px solid var(--success-color);
+}
+
+.border-left-info {
+    border-left: 4px solid var(--info-color);
+}
+
+.border-left-warning {
+    border-left: 4px solid var(--warning-color);
+}
+
+.border-left-danger {
+    border-left: 4px solid var(--danger-color);
+}
+
+/* Employer & Jobseeker Dashboard */
+.employer-sidebar .list-group-item.active,
+.jobseeker-sidebar .list-group-item.active {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+.step-number {
+    width: 36px;
+    height: 36px;
+    flex-shrink: 0;
+}
+
+/* Profile Page */
+.profile-picture-container {
+    width: 150px;
+    height: 150px;
+    border-radius: 50%;
+    overflow: hidden;
+    border: 2px solid #dee2e6;
+    background-color: #f8f9fa;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.profile-picture-placeholder {
+    font-size: 3rem;
+    color: #dee2e6;
+}
+
+.profile-picture-preview {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+/* Progress Circle */
+.progress-circle {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 120px;
+    height: 120px;
+}
+
+.progress-text {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--dark-color);
+}
+
+/* Skills Management */
+.skill-tags {
+    min-height: 50px;
+}
+
+.skill-tag {
+    margin-right: 5px;
+    margin-bottom: 5px;
+}
+
+.skill-option {
+    cursor: pointer;
+    margin-right: 5px;
+    margin-bottom: 5px;
+}
+
+.skill-option:hover {
+    background-color: var(--light-color) !important;
+}
+
+/* Footer */
+.footer {
+    margin-top: 5rem;
+}
+
+.footer a {
+    color: var(--secondary-color);
+    text-decoration: none;
+}
+
+.footer a:hover {
+    color: var(--primary-color);
+    text-decoration: underline;
+}
+
+.social-icons a {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    background-color: var(--light-color);
+    border-radius: 50%;
+    transition: all 0.2s ease;
+}
+
+.social-icons a:hover {
+    background-color: var(--primary-color);
+    color: #fff;
+}
+
+/* Media Queries */
+@media (max-width: 767.98px) {
+    .hero-section {
+        padding: 2rem 0;
+        text-align: center;
+    }
+    
+    .trending-tags {
+        justify-content: center;
+    }
+    
+    .placeholder-logo {
+        width: 60px;
+        height: 60px;
+        font-size: 1.5rem;
+    }
+    
+    .featured-companies .company-card {
+        margin-bottom: 1.5rem;
+    }
+}
+
+@media (min-width: 992px) {
+    .search-box {
+        padding: 1.5rem !important;
+    }
+}
+
+/* Animation */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.animate-fadeInUp {
+    animation: fadeInUp 0.5s ease-out;
+}
+
+/* New Modern Styles */
+.btn {
+    font-weight: 500;
+    padding: 0.65rem 1.5rem;
+    border-radius: 5px;
+    transition: var(--transition);
+}
+
+.btn-primary {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+.btn-primary:hover {
+    background-color: #3d5de4;
+    border-color: #3d5de4;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(74, 108, 247, 0.25);
+}
+
+.btn-outline-primary {
+    color: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+.btn-outline-primary:hover {
+    background-color: var(--primary-color);
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(74, 108, 247, 0.25);
+}
+
+.card {
+    border: none;
+    border-radius: 10px;
+    box-shadow: var(--box-shadow);
+    transition: var(--transition);
+}
+
+.card:hover {
+    box-shadow: var(--card-shadow);
+}
+
+.badge {
+    padding: 0.5em 1em;
+    font-weight: 500;
+    border-radius: 50px;
+}
+
+.badge-primary-soft {
+    background-color: var(--primary-light);
+    color: var(--primary-color);
+}
+
+.badge-success-soft {
+    background-color: rgba(19, 194, 150, 0.15);
+    color: var(--success-color);
+}
+
+.badge-warning-soft {
+    background-color: rgba(251, 176, 64, 0.15);
+    color: var(--warning-color);
+}
+
+.table {
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.table th {
+    font-weight: 600;
+    color: var(--dark-color);
+}
+
+.dash-card {
+    border-radius: 15px;
+    border: none;
+    box-shadow: var(--box-shadow);
+    transition: var(--transition);
+}
+
+.dash-card:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--card-shadow);
+}
+
+.dash-icon {
+    width: 60px;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 12px;
+    font-size: 1.5rem;
+}
+
+.bg-primary-soft {
+    background-color: var(--primary-light);
+    color: var(--primary-color);
+}
+
+.bg-success-soft {
+    background-color: rgba(19, 194, 150, 0.15);
+    color: var(--success-color);
+}
+
+.bg-warning-soft {
+    background-color: rgba(251, 176, 64, 0.15);
+    color: var(--warning-color);
+}
+
+.bg-info-soft {
+    background-color: rgba(58, 186, 244, 0.15);
+    color: var(--info-color);
+}
+
+/* Analytics Dashboard */
+.analytics-card {
+    border-radius: 15px;
+    overflow: hidden;
+    box-shadow: var(--box-shadow);
+    transition: var(--transition);
+}
+
+.analytics-card:hover {
+    box-shadow: var(--card-shadow);
+}
+
+.stats-card {
+    border-radius: 15px;
+    padding: 25px;
+    border: none;
+    box-shadow: var(--box-shadow);
+    transition: var(--transition);
+}
+
+.stats-card:hover {
+    box-shadow: var(--card-shadow);
+}
+
+.stats-icon {
+    width: 50px;
+    height: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 12px;
+    font-size: 1.25rem;
+}

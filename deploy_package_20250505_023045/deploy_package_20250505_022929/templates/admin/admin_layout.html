@@ -1,0 +1,98 @@
+{% extends 'base.html' %}
+
+{% block title %}Admin Panel - Remote Hive{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="row">
+        <!-- Sidebar -->
+        <div class="col-lg-2 col-md-3">
+            <div class="admin-sidebar card shadow-sm mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Admin Panel</h5>
+                </div>
+                <div class="list-group list-group-flush">
+                    <a href="{{ url_for('admin_dashboard') }}" class="list-group-item list-group-item-action {% if request.endpoint == 'admin_dashboard' %}active{% endif %}">
+                        <i class="fas fa-tachometer-alt me-2"></i> Dashboard
+                    </a>
+                    <a href="{{ url_for('analytics_dashboard') }}" class="list-group-item list-group-item-action {% if request.endpoint == 'analytics_dashboard' %}active{% endif %}">
+                        <i class="fas fa-chart-line me-2"></i> Analytics
+                    </a>
+                    <a href="{{ url_for('job_scraper') }}" class="list-group-item list-group-item-action {% if request.endpoint == 'job_scraper' %}active{% endif %}">
+                        <i class="fas fa-spider me-2"></i> Job Scraper
+                    </a>
+
+                    <!-- User Management -->
+                    <a href="{{ url_for('manage_users') }}" class="list-group-item list-group-item-action {% if request.endpoint == 'manage_users' or request.endpoint == 'add_user' or request.endpoint == 'edit_user' %}active{% endif %}">
+                        <i class="fas fa-users me-2"></i> Users
+                    </a>
+
+                    <!-- Job Management -->
+                    <a href="{{ url_for('manage_jobs') }}" class="list-group-item list-group-item-action {% if request.endpoint == 'manage_jobs' or request.endpoint == 'add_job' or request.endpoint == 'edit_job' %}active{% endif %}">
+                        <i class="fas fa-briefcase me-2"></i> Jobs
+                    </a>
+
+                    <!-- Company Management -->
+                    <a href="{{ url_for('manage_companies') }}" class="list-group-item list-group-item-action {% if request.endpoint == 'manage_companies' or request.endpoint == 'add_company' or request.endpoint == 'edit_company' %}active{% endif %}">
+                        <i class="fas fa-building me-2"></i> Companies
+                    </a>
+
+                    <!-- Application Management -->
+                    <a href="{{ url_for('manage_applications') }}" class="list-group-item list-group-item-action {% if request.endpoint == 'manage_applications' %}active{% endif %}">
+                        <i class="fas fa-file-alt me-2"></i> Applications
+                    </a>
+
+                    <!-- Category Management -->
+                    <a href="{{ url_for('manage_categories') }}" class="list-group-item list-group-item-action {% if request.endpoint == 'manage_categories' or request.endpoint == 'add_category' or request.endpoint == 'edit_category' %}active{% endif %}">
+                        <i class="fas fa-tags me-2"></i> Categories
+                    </a>
+
+                    <!-- Site Settings -->
+                    <div class="list-group-item list-group-item-action dropdown">
+                        <a href="#" class="d-flex align-items-center text-decoration-none dropdown-toggle" id="settingsDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fas fa-cog me-2"></i> Settings
+                        </a>
+                        <ul class="dropdown-menu w-100" aria-labelledby="settingsDropdown">
+                            <li><a class="dropdown-item" href="{{ url_for('google_analytics_setup') }}">Google Analytics</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('manage_site_content') }}">Site Content</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('import_export_data') }}">Import/Export</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-secondary text-white">
+                    <h5 class="mb-0">Quick Actions</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <a href="{{ url_for('add_job') }}" class="btn btn-sm btn-outline-primary">
+                            <i class="fas fa-plus-circle me-1"></i> Add Job
+                        </a>
+                        <a href="{{ url_for('add_company') }}" class="btn btn-sm btn-outline-primary">
+                            <i class="fas fa-plus-circle me-1"></i> Add Company
+                        </a>
+                        <a href="{{ url_for('add_user') }}" class="btn btn-sm btn-outline-primary">
+                            <i class="fas fa-plus-circle me-1"></i> Add User
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="col-lg-10 col-md-9">
+            {% block admin_content %}{% endblock %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<!-- Admin-specific scripts -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.1/dist/chart.min.js"></script>
+<script src="{{ url_for('static', filename='js/admin.js') }}"></script>
+{% block admin_scripts %}{% endblock %}
+{% endblock %}
