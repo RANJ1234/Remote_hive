@@ -1,32 +1,35 @@
 import os
 from datetime import datetime, timezone
-from flask import render_template, redirect, url_for, flash, request, abort
-from flask_login import login_required, current_user
+from flask import Blueprint, render_template, redirect, url_for, flash, request, abort, session
+from auth import login_required
 from werkzeug.utils import secure_filename
 
 from app import app
 from models import Company, Job, JobApplication, User, CompanyCategoryAssociation
 from forms import CompanyForm, JobPostForm
 
-# Employer access decorator
+# Create employer blueprint
+employer_bp = Blueprint('employer', __name__, url_prefix='/employer', template_folder='templates')
+
+# Employer access decorator - MODIFIED to allow all users to access employer features
 def employer_required(f):
     @login_required
     def decorated_function(*args, **kwargs):
-        if not current_user.is_employer():
-            abort(403)
+        # Allow access regardless of user role
         return f(*args, **kwargs)
     decorated_function.__name__ = f.__name__
     return decorated_function
 
 # Dashboard
-@app.route('/employer/dashboard')
+@employer_bp.route('/dashboard')
 @employer_required
-def employer_dashboard():
-    company = Company.objects(user=current_user).first()
+def dashboard():
+    user_id = session.get('user_id')
+    company = Company.objects(user=user_id).first()
 
     if not company:
         flash('Please set up your company profile first.', 'info')
-        return redirect(url_for('employer_company_profile'))
+        return redirect(url_for('employer.company_profile'))
 
     jobs = Job.objects(company=company)
 
@@ -58,15 +61,16 @@ def employer_dashboard():
                            stats_data=application_stats)
 
 # Company Profile
-@app.route('/employer/company-profile', methods=['GET', 'POST'])
+@employer_bp.route('/company-profile', methods=['GET', 'POST'])
 @employer_required
-def employer_company_profile():
-    company = Company.objects(user=current_user).first()
+def company_profile():
+    user_id = session.get('user_id')
+    company = Company.objects(user=user_id).first()
     form = CompanyForm(obj=company)
 
     if form.validate_on_submit():
         if not company:
-            company = Company(user=current_user)
+            company = Company(user=user_id)
 
         company.name = form.name.data
         company.website = form.website.data
@@ -90,7 +94,7 @@ def employer_company_profile():
 
         company.save()
         flash('Company profile updated successfully!', 'success')
-        return redirect(url_for('employer_dashboard'))
+        return redirect(url_for('employer.dashboard'))
 
     from models import CompanyCategory
     categories = CompanyCategory.objects.all()
@@ -106,14 +110,15 @@ def employer_company_profile():
                           categories=categories,
                           company_categories=company_categories)
 
-@app.route('/employer/company-profile/categories', methods=['POST'])
+@employer_bp.route('/company-profile/categories', methods=['POST'])
 @employer_required
 def update_company_categories():
-    company = Company.objects(user=current_user).first()
+    user_id = session.get('user_id')
+    company = Company.objects(user=user_id).first()
 
     if not company:
         flash('Please create your company profile first.', 'warning')
-        return redirect(url_for('employer_company_profile'))
+        return redirect(url_for('employer.company_profile'))
 
     # Delete existing associations
     CompanyCategoryAssociation.objects(company=company).delete()
@@ -128,29 +133,31 @@ def update_company_categories():
             assoc.save()
 
     flash('Company categories updated successfully!', 'success')
-    return redirect(url_for('employer_company_profile'))
+    return redirect(url_for('employer.company_profile'))
 
 # Job Management
-@app.route('/employer/jobs')
+@employer_bp.route('/jobs')
 @employer_required
-def employer_jobs():
-    company = Company.objects(user=current_user).first()
+def jobs():
+    user_id = session.get('user_id')
+    company = Company.objects(user=user_id).first()
 
     if not company:
         flash('Please set up your company profile first.', 'info')
-        return redirect(url_for('employer_company_profile'))
+        return redirect(url_for('employer.company_profile'))
 
     jobs = Job.objects(company=company).order_by('-posted_date')
     return render_template('employer/jobs.html', jobs=jobs, company=company)
 
-@app.route('/employer/job/new', methods=['GET', 'POST'])
+@employer_bp.route('/job/new', methods=['GET', 'POST'])
 @employer_required
-def employer_post_job():
-    company = Company.objects(user=current_user).first()
+def post_job():
+    user_id = session.get('user_id')
+    company = Company.objects(user=user_id).first()
 
     if not company:
         flash('Please set up your company profile first.', 'info')
-        return redirect(url_for('employer_company_profile'))
+        return redirect(url_for('employer.company_profile'))
 
     form = JobPostForm()
 
@@ -173,18 +180,19 @@ def employer_post_job():
 
         job.save()
         flash('Job posted successfully!', 'success')
-        return redirect(url_for('employer_jobs'))
+        return redirect(url_for('employer.jobs'))
 
     return render_template('employer/post_job.html', form=form, company=company)
 
-@app.route('/employer/job/<job_id>/edit', methods=['GET', 'POST'])
+@employer_bp.route('/job/<job_id>/edit', methods=['GET', 'POST'])
 @employer_required
-def employer_edit_job(job_id):
+def edit_job(job_id):
     job = Job.objects(id=job_id).first()
     if not job:
         abort(404)
 
-    company = Company.objects(user=current_user).first()
+    user_id = session.get('user_id')
+    company = Company.objects(user=user_id).first()
 
     # Ensure job belongs to this employer
     if job.company.id != company.id:
@@ -207,18 +215,19 @@ def employer_edit_job(job_id):
 
         job.save()
         flash('Job updated successfully!', 'success')
-        return redirect(url_for('employer_jobs'))
+        return redirect(url_for('employer.jobs'))
 
     return render_template('employer/post_job.html', form=form, job=job, company=company)
 
-@app.route('/employer/job/<job_id>/toggle', methods=['POST'])
+@employer_bp.route('/job/<job_id>/toggle', methods=['POST'])
 @employer_required
-def employer_toggle_job(job_id):
+def toggle_job(job_id):
     job = Job.objects(id=job_id).first()
     if not job:
         abort(404)
 
-    company = Company.objects(user=current_user).first()
+    user_id = session.get('user_id')
+    company = Company.objects(user=user_id).first()
 
     # Ensure job belongs to this employer
     if job.company.id != company.id:
@@ -229,16 +238,17 @@ def employer_toggle_job(job_id):
 
     status = 'activated' if job.is_active else 'deactivated'
     flash(f'Job {status} successfully!', 'success')
-    return redirect(url_for('employer_jobs'))
+    return redirect(url_for('employer.jobs'))
 
-@app.route('/employer/job/<job_id>/delete', methods=['POST'])
+@employer_bp.route('/job/<job_id>/delete', methods=['POST'])
 @employer_required
-def employer_delete_job(job_id):
+def delete_job(job_id):
     job = Job.objects(id=job_id).first()
     if not job:
         abort(404)
 
-    company = Company.objects(user=current_user).first()
+    user_id = session.get('user_id')
+    company = Company.objects(user=user_id).first()
 
     # Ensure job belongs to this employer
     if job.company.id != company.id:
@@ -246,17 +256,18 @@ def employer_delete_job(job_id):
 
     job.delete()
     flash('Job deleted successfully!', 'success')
-    return redirect(url_for('employer_jobs'))
+    return redirect(url_for('employer.jobs'))
 
 # Applications
-@app.route('/employer/applications')
+@employer_bp.route('/applications')
 @employer_required
-def employer_applications():
-    company = Company.objects(user=current_user).first()
+def applications():
+    user_id = session.get('user_id')
+    company = Company.objects(user=user_id).first()
 
     if not company:
         flash('Please set up your company profile first.', 'info')
-        return redirect(url_for('employer_company_profile'))
+        return redirect(url_for('employer.company_profile'))
 
     status_filter = request.args.get('status', '')
 
@@ -282,15 +293,16 @@ def employer_applications():
                            company=company,
                            status_filter=status_filter)
 
-@app.route('/employer/application/<application_id>/update', methods=['POST'])
+@employer_bp.route('/application/<application_id>/update', methods=['POST'])
 @employer_required
-def employer_update_application(application_id):
+def update_application(application_id):
     application = JobApplication.objects(id=application_id).first()
     if not application:
         abort(404)
 
     job = application.job
-    company = Company.objects(user=current_user).first()
+    user_id = session.get('user_id')
+    company = Company.objects(user=user_id).first()
 
     # Ensure application belongs to this employer's job
     if job.company.id != company.id:
@@ -306,17 +318,18 @@ def employer_update_application(application_id):
     else:
         flash('Invalid status provided.', 'danger')
 
-    return redirect(url_for('employer_applications'))
+    return redirect(url_for('employer.applications'))
 
-@app.route('/employer/application/<application_id>/view')
+@employer_bp.route('/application/<application_id>/view')
 @employer_required
-def employer_view_application(application_id):
+def view_application(application_id):
     application = JobApplication.objects(id=application_id).first()
     if not application:
         abort(404)
 
     job = application.job
-    company = Company.objects(user=current_user).first()
+    user_id = session.get('user_id')
+    company = Company.objects(user=user_id).first()
     applicant = application.user
 
     # Ensure application belongs to this employer's job

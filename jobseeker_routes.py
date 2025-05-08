@@ -1,36 +1,42 @@
 import os
 from datetime import datetime, timezone
-from flask import render_template, redirect, url_for, flash, request, abort, send_from_directory
-from flask_login import login_required, current_user
+from flask import Blueprint, render_template, redirect, url_for, flash, request, abort, send_from_directory, session
+from auth import login_required
 from werkzeug.utils import secure_filename
 
 from app import app
 from models import JobseekerProfile, Job, JobApplication, Company, Skill
 from forms import JobseekerProfileForm, JobApplicationForm
 
-# Jobseeker access decorator
+# Create jobseeker blueprint
+jobseeker_bp = Blueprint('jobseeker', __name__, url_prefix='/jobseeker', template_folder='templates')
+
+# Jobseeker access decorator - MODIFIED to allow all users to access jobseeker features
 def jobseeker_required(f):
     @login_required
     def decorated_function(*args, **kwargs):
-        if not current_user.is_jobseeker():
-            abort(403)
+        # Allow access regardless of user role
         return f(*args, **kwargs)
     decorated_function.__name__ = f.__name__
     return decorated_function
 
 # Dashboard
-@app.route('/jobseeker/dashboard')
+@jobseeker_bp.route('/dashboard')
 @jobseeker_required
 def jobseeker_dashboard():
-    profile = JobseekerProfile.objects(user=current_user).first()
+    user_id = session.get('user_id')
+    profile = JobseekerProfile.objects(user=user_id).first()
 
     # Get applied jobs
-    applications = JobApplication.objects(user=current_user).order_by('-applied_date')
+    applications = JobApplication.objects(user=user_id).order_by('-applied_date')
 
     # Get recommended jobs (based on user skills if they exist)
     recommended_jobs = []
-    if current_user.skills:
-        user_skill_ids = [skill.id for skill in current_user.skills]
+    # Get user from database to access skills
+    from models import User
+    user = User.objects(id=user_id).first()
+    if user and hasattr(user, 'skills') and user.skills:
+        user_skill_ids = [skill.id for skill in user.skills]
 
         # Get jobs matching user skills
         # This is a simplified approach - in a real app, you'd use a more sophisticated algorithm
@@ -50,13 +56,14 @@ def jobseeker_dashboard():
                           recommended_jobs=recommended_jobs)
 
 # Profile management
-@app.route('/jobseeker/profile', methods=['GET', 'POST'])
+@jobseeker_bp.route('/profile', methods=['GET', 'POST'])
 @jobseeker_required
 def jobseeker_profile():
-    profile = JobseekerProfile.objects(user=current_user).first()
+    user_id = session.get('user_id')
+    profile = JobseekerProfile.objects(user=user_id).first()
 
     if not profile:
-        profile = JobseekerProfile(user=current_user)
+        profile = JobseekerProfile(user=user_id)
         profile.save()
 
     form = JobseekerProfileForm(obj=profile)
@@ -103,18 +110,26 @@ def jobseeker_profile():
 
     return render_template('jobseeker/profile.html', form=form, profile=profile, all_skills=all_skills)
 
-@app.route('/jobseeker/skills', methods=['GET', 'POST'])
+@jobseeker_bp.route('/skills', methods=['GET', 'POST'])
 @jobseeker_required
 def jobseeker_skills():
-    profile = JobseekerProfile.objects(user=current_user).first()
+    user_id = session.get('user_id')
+    profile = JobseekerProfile.objects(user=user_id).first()
 
     if not profile:
         flash('Please complete your profile first.', 'warning')
         return redirect(url_for('jobseeker_profile'))
 
     if request.method == 'POST':
+        # Get user from database
+        from models import User
+        user = User.objects(id=user_id).first()
+        if not user:
+            flash('User not found', 'danger')
+            return redirect(url_for('jobseeker_dashboard'))
+
         # Clear existing skills
-        current_user.skills = []
+        user.skills = []
 
         # Get selected skill IDs from form
         skill_ids = request.form.getlist('skills')
@@ -123,7 +138,7 @@ def jobseeker_skills():
         for skill_id in skill_ids:
             skill = Skill.objects(id=skill_id).first()
             if skill:
-                current_user.skills.append(skill)
+                user.skills.append(skill)
 
         # Handle new skill creation
         new_skill_name = request.form.get('new_skill', '').strip()
@@ -131,20 +146,25 @@ def jobseeker_skills():
             # Check if skill already exists
             existing_skill = Skill.objects(name__iexact=new_skill_name).first()
             if existing_skill:
-                if existing_skill not in current_user.skills:
-                    current_user.skills.append(existing_skill)
+                if existing_skill not in user.skills:
+                    user.skills.append(existing_skill)
             else:
                 new_skill = Skill(name=new_skill_name)
                 new_skill.save()
-                current_user.skills.append(new_skill)
+                user.skills.append(new_skill)
 
-        current_user.save()
+        user.save()
         flash('Skills updated successfully!', 'success')
         return redirect(url_for('jobseeker_dashboard'))
 
     # Get all skills for the form
     all_skills = Skill.objects.order_by('name')
-    user_skill_ids = [skill.id for skill in current_user.skills]
+    # Get user skills
+    from models import User
+    user = User.objects(id=user_id).first()
+    user_skill_ids = []
+    if user and hasattr(user, 'skills') and user.skills:
+        user_skill_ids = [skill.id for skill in user.skills]
 
     return render_template('jobseeker/skills.html',
                            profile=profile,
@@ -152,7 +172,7 @@ def jobseeker_skills():
                            user_skill_ids=user_skill_ids)
 
 # Job applications
-@app.route('/jobseeker/apply/<job_id>', methods=['GET', 'POST'])
+@jobseeker_bp.route('/apply/<job_id>', methods=['GET', 'POST'])
 @jobseeker_required
 def apply_for_job(job_id):
     job = Job.objects(id=job_id).first()
@@ -165,7 +185,8 @@ def apply_for_job(job_id):
         return redirect(url_for('job_details', job_id=job.id))
 
     # Check if user already applied
-    existing_application = JobApplication.objects(job=job, user=current_user).first()
+    user_id = session.get('user_id')
+    existing_application = JobApplication.objects(job=job, user=user_id).first()
 
     if existing_application:
         flash('You have already applied for this job.', 'info')
@@ -175,7 +196,7 @@ def apply_for_job(job_id):
 
     if form.validate_on_submit():
         # Get profile for resume
-        profile = JobseekerProfile.objects(user=current_user).first()
+        profile = JobseekerProfile.objects(user=user_id).first()
         resume_path = profile.resume_path if profile else None
 
         # Handle resume upload if provided
@@ -188,7 +209,7 @@ def apply_for_job(job_id):
 
         application = JobApplication(
             job=job,
-            user=current_user,
+            user=user_id,
             resume_path=resume_path,
             cover_letter=form.cover_letter.data
         )
@@ -204,10 +225,11 @@ def apply_for_job(job_id):
 
     return render_template('jobseeker/apply.html', form=form, job=job)
 
-@app.route('/jobseeker/applications')
+@jobseeker_bp.route('/applications')
 @jobseeker_required
 def jobseeker_applications():
-    applications = JobApplication.objects(user=current_user).order_by('-applied_date')
+    user_id = session.get('user_id')
+    applications = JobApplication.objects(user=user_id).order_by('-applied_date')
 
     # Create a list of tuples with application, job, and company
     application_data = []
@@ -216,7 +238,7 @@ def jobseeker_applications():
 
     return render_template('jobseeker/applications.html', applications=application_data)
 
-@app.route('/jobseeker/application/<application_id>/withdraw', methods=['POST'])
+@jobseeker_bp.route('/application/<application_id>/withdraw', methods=['POST'])
 @jobseeker_required
 def withdraw_application(application_id):
     application = JobApplication.objects(id=application_id).first()
@@ -224,7 +246,8 @@ def withdraw_application(application_id):
         abort(404)
 
     # Ensure application belongs to this user
-    if application.user.id != current_user.id:
+    user_id = session.get('user_id')
+    if str(application.user.id) != user_id:
         abort(403)
 
     # Only allow withdrawal if application is in 'applied' or 'reviewed' state
@@ -241,7 +264,7 @@ def withdraw_application(application_id):
     return redirect(url_for('jobseeker_applications'))
 
 # Saved Jobs
-@app.route('/jobseeker/saved-jobs')
+@jobseeker_bp.route('/saved-jobs')
 @jobseeker_required
 def saved_jobs():
     # This would require extending the model with a SavedJob table

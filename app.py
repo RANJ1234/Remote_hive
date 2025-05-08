@@ -4,9 +4,8 @@ import logging.handlers
 import threading
 import time
 from datetime import datetime
-from flask import Flask, request, g, render_template, jsonify
+from flask import Flask, request, g, render_template, jsonify, session
 from werkzeug.middleware.proxy_fix import ProxyFix
-from flask_login import LoginManager
 from mongoengine import connect, disconnect_all
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
@@ -45,7 +44,6 @@ def setup_logging(app):
     werkzeug_logger.setLevel(log_level)
 
 # Initialize Flask extensions
-login_manager = LoginManager()
 compress = Compress()
 
 # Global connection status
@@ -248,27 +246,10 @@ else:
     import mock_models as models
     logging.warning("Using mock models due to MongoDB connection failure")
 
-# Initialize extensions with the app
-login_manager.init_app(app)
-login_manager.login_view = 'login'
-login_manager.login_message = 'Please log in to access this page.'
-
-# User loader function for Flask-Login
-@login_manager.user_loader
-def load_user(user_id):
-    try:
-        # Check if user_id is a valid ObjectId if using MongoDB
-        if mongodb_connected:
-            from bson import ObjectId
-            if not ObjectId.is_valid(user_id):
-                logging.error(f"Invalid user_id format: {user_id}")
-                return None
-
-        # Get user from the database
-        return models.User.objects(id=user_id).first()
-    except Exception as e:
-        logging.error(f"Error loading user: {e}")
-        return None
+# Session configuration
+app.config['SESSION_TYPE'] = 'filesystem'
+app.config['SESSION_PERMANENT'] = False
+app.config['PERMANENT_SESSION_LIFETIME'] = 3600  # 1 hour
 
 # Test route to verify server is working
 @app.route('/test-server')

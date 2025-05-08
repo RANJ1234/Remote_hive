@@ -5,13 +5,29 @@ import csv
 import json
 import random
 from datetime import datetime, timezone
-from flask import render_template, redirect, url_for, flash, request, abort, make_response
-from flask_login import login_required, current_user
+from flask import render_template, redirect, url_for, flash, request, abort, make_response, session
+from auth import admin_required
 from werkzeug.utils import secure_filename
 
-from app import app, db
+from app import app
 from models import User, Job, Company, JobApplication, CompanyCategory, CompanyCategoryAssociation, JobseekerProfile
 from forms import AdminUserForm, CompanyForm
+
+# Helper function for pagination
+def iter_pages(current_page, total_pages, left_edge=2, right_edge=2, left_current=2, right_current=2):
+    """
+    Pagination helper function for MongoDB pagination
+    """
+    last = 0
+    for num in range(1, total_pages + 1):
+        if (num <= left_edge or
+            (num > current_page - left_current - 1 and
+             num < current_page + right_current) or
+            num > total_pages - right_edge):
+            if last + 1 != num:
+                yield None
+            yield num
+            last = num
 
 # For Excel export
 try:
@@ -27,15 +43,7 @@ try:
 except ImportError:
     canvas = None
 
-# Admin access decorator
-def admin_required(f):
-    @login_required
-    def decorated_function(*args, **kwargs):
-        if not current_user.is_admin():
-            abort(403)
-        return f(*args, **kwargs)
-    decorated_function.__name__ = f.__name__
-    return decorated_function
+# Use the admin_required decorator from auth.py instead of defining it here
 
 # Admin Dashboard
 @app.route('/admin/dashboard')
@@ -88,32 +96,25 @@ def manage_users():
     total_users = User.objects.count()
     users_list = User.objects.skip(skip).limit(per_page)
 
-    # Create a pagination object with the necessary attributes
-    class Pagination:
-        def __init__(self, items, page, per_page, total):
-            self.items = items
-            self.page = page
-            self.per_page = per_page
-            self.total = total
-            self.pages = (total + per_page - 1) // per_page  # Ceiling division
-
-        @property
-        def has_prev(self):
-            return self.page > 1
-
-        @property
-        def has_next(self):
-            return self.page < self.pages
-
-        @property
-        def prev_num(self):
-            return self.page - 1 if self.has_prev else None
-
-        @property
-        def next_num(self):
-            return self.page + 1 if self.has_next else None
-
-    users = Pagination(users_list, page, per_page, total_users)
+    # Create a MongoDB-friendly pagination object
+    users = {
+        'items': users_list,
+        'page': page,
+        'per_page': per_page,
+        'total': total_users,
+        'pages': (total_users + per_page - 1) // per_page,  # Ceiling division
+        'has_prev': page > 1,
+        'has_next': page * per_page < total_users,
+        'prev_num': page - 1 if page > 1 else None,
+        'next_num': page + 1 if page * per_page < total_users else None,
+        'iter_pages': lambda **kwargs: iter_pages(
+            page, (total_users + per_page - 1) // per_page,
+            kwargs.get('left_edge', 2),
+            kwargs.get('right_edge', 2),
+            kwargs.get('left_current', 2),
+            kwargs.get('right_current', 2)
+        )
+    }
     return render_template('admin/manage_users.html', users=users)
 
 @app.route('/admin/user/new', methods=['GET', 'POST'])
@@ -196,32 +197,25 @@ def manage_jobs():
     # Get jobs with pagination
     jobs_list = Job.objects.order_by('-posted_date').skip(skip).limit(per_page)
 
-    # Create a pagination object with the necessary attributes
-    class Pagination:
-        def __init__(self, items, page, per_page, total):
-            self.items = items
-            self.page = page
-            self.per_page = per_page
-            self.total = total
-            self.pages = (total + per_page - 1) // per_page  # Ceiling division
-
-        @property
-        def has_prev(self):
-            return self.page > 1
-
-        @property
-        def has_next(self):
-            return self.page < self.pages
-
-        @property
-        def prev_num(self):
-            return self.page - 1 if self.has_prev else None
-
-        @property
-        def next_num(self):
-            return self.page + 1 if self.has_next else None
-
-    jobs = Pagination(jobs_list, page, per_page, total_jobs)
+    # Create a MongoDB-friendly pagination object
+    jobs = {
+        'items': jobs_list,
+        'page': page,
+        'per_page': per_page,
+        'total': total_jobs,
+        'pages': (total_jobs + per_page - 1) // per_page,  # Ceiling division
+        'has_prev': page > 1,
+        'has_next': page * per_page < total_jobs,
+        'prev_num': page - 1 if page > 1 else None,
+        'next_num': page + 1 if page * per_page < total_jobs else None,
+        'iter_pages': lambda **kwargs: iter_pages(
+            page, (total_jobs + per_page - 1) // per_page,
+            kwargs.get('left_edge', 2),
+            kwargs.get('right_edge', 2),
+            kwargs.get('left_current', 2),
+            kwargs.get('right_current', 2)
+        )
+    }
     return render_template('admin/manage_jobs.html', jobs=jobs)
 
 @app.route('/admin/job/new', methods=['GET', 'POST'])
@@ -344,32 +338,25 @@ def manage_companies():
     # Get companies with pagination
     companies_list = Company.objects.skip(skip).limit(per_page)
 
-    # Create a pagination object with the necessary attributes
-    class Pagination:
-        def __init__(self, items, page, per_page, total):
-            self.items = items
-            self.page = page
-            self.per_page = per_page
-            self.total = total
-            self.pages = (total + per_page - 1) // per_page  # Ceiling division
-
-        @property
-        def has_prev(self):
-            return self.page > 1
-
-        @property
-        def has_next(self):
-            return self.page < self.pages
-
-        @property
-        def prev_num(self):
-            return self.page - 1 if self.has_prev else None
-
-        @property
-        def next_num(self):
-            return self.page + 1 if self.has_next else None
-
-    companies = Pagination(companies_list, page, per_page, total_companies)
+    # Create a MongoDB-friendly pagination object
+    companies = {
+        'items': companies_list,
+        'page': page,
+        'per_page': per_page,
+        'total': total_companies,
+        'pages': (total_companies + per_page - 1) // per_page,  # Ceiling division
+        'has_prev': page > 1,
+        'has_next': page * per_page < total_companies,
+        'prev_num': page - 1 if page > 1 else None,
+        'next_num': page + 1 if page * per_page < total_companies else None,
+        'iter_pages': lambda **kwargs: iter_pages(
+            page, (total_companies + per_page - 1) // per_page,
+            kwargs.get('left_edge', 2),
+            kwargs.get('right_edge', 2),
+            kwargs.get('left_current', 2),
+            kwargs.get('right_current', 2)
+        )
+    }
     return render_template('admin/manage_companies.html', companies=companies, Job=Job)
 
 @app.route('/admin/company/new', methods=['GET', 'POST'])
@@ -812,6 +799,12 @@ def analytics_dashboard():
                           top_countries=top_countries,
                           top_referrers=top_referrers)
 
+# Chart Test Page
+@app.route('/admin/chart-test')
+@admin_required
+def chart_test():
+    return render_template('admin/chart_test.html')
+
 # Google Analytics Setup
 @app.route('/admin/google-analytics')
 @admin_required
@@ -842,36 +835,29 @@ def manage_applications():
     # Get applications with pagination
     applications_list = JobApplication.objects.order_by('-applied_date').skip(skip).limit(per_page)
 
-    # Create a pagination object with the necessary attributes
-    class Pagination:
-        def __init__(self, items, page, per_page, total):
-            self.items = items
-            self.page = page
-            self.per_page = per_page
-            self.total = total
-            self.pages = (total + per_page - 1) // per_page  # Ceiling division
-
-        @property
-        def has_prev(self):
-            return self.page > 1
-
-        @property
-        def has_next(self):
-            return self.page < self.pages
-
-        @property
-        def prev_num(self):
-            return self.page - 1 if self.has_prev else None
-
-        @property
-        def next_num(self):
-            return self.page + 1 if self.has_next else None
-
-    applications_pagination = Pagination(applications_list, page, per_page, total_applications)
+    # Create a MongoDB-friendly pagination object
+    applications_pagination = {
+        'items': applications_list,
+        'page': page,
+        'per_page': per_page,
+        'total': total_applications,
+        'pages': (total_applications + per_page - 1) // per_page,  # Ceiling division
+        'has_prev': page > 1,
+        'has_next': page * per_page < total_applications,
+        'prev_num': page - 1 if page > 1 else None,
+        'next_num': page + 1 if page * per_page < total_applications else None,
+        'iter_pages': lambda **kwargs: iter_pages(
+            page, (total_applications + per_page - 1) // per_page,
+            kwargs.get('left_edge', 2),
+            kwargs.get('right_edge', 2),
+            kwargs.get('left_current', 2),
+            kwargs.get('right_current', 2)
+        )
+    }
 
     # Create a list with application data and related entities
     applications = []
-    for app in applications_pagination.items:
+    for app in applications_pagination['items']:
         applications.append((app, app.job, app.user, app.job.company if app.job else None))
 
     return render_template('admin/manage_applications.html',
@@ -964,25 +950,25 @@ def export_data():
 
     # Prepare data based on type
     if data_type == 'users':
-        data = User.query.all()
+        data = User.objects.all()
         headers = ['ID', 'Username', 'Email', 'Role', 'Active', 'Created At']
-        rows = [[user.id, user.username, user.email, user.role,
+        rows = [[str(user.id), user.username, user.email, user.role,
                 user.is_active, user.created_at.strftime('%Y-%m-%d')] for user in data]
     elif data_type == 'jobs':
-        data = Job.query.all()
+        data = Job.objects.all()
         headers = ['ID', 'Title', 'Company', 'Type', 'Remote', 'Active', 'Posted Date']
-        rows = [[job.id, job.title, job.company.name, job.job_type,
+        rows = [[str(job.id), job.title, job.company.name, job.job_type,
                 job.is_remote, job.is_active, job.posted_date.strftime('%Y-%m-%d')] for job in data]
     elif data_type == 'companies':
-        data = Company.query.all()
+        data = Company.objects.all()
         headers = ['ID', 'Name', 'Industry', 'Size', 'Featured']
-        rows = [[company.id, company.name, company.industry,
+        rows = [[str(company.id), company.name, company.industry,
                 company.company_size, company.is_featured] for company in data]
     elif data_type == 'applications':
-        data = JobApplication.query.all()
+        data = JobApplication.objects.all()
         headers = ['ID', 'Job', 'Applicant', 'Status', 'Applied Date']
-        rows = [[app.id, Job.query.get(app.job_id).title,
-                User.query.get(app.user_id).username, app.status,
+        rows = [[str(app.id), app.job.title,
+                app.user.username, app.status,
                 app.applied_date.strftime('%Y-%m-%d')] for app in data]
     else:
         flash('Invalid data type selected', 'danger')
@@ -1125,19 +1111,19 @@ def import_data():
                     for job_data in json_data:
                         # Check if company exists
                         company_name = job_data.get('company_name')
-                        company = Company.query.filter_by(name=company_name).first()
+                        company = Company.objects(name=company_name).first()
                         if not company:
                             flash(f'Company "{company_name}" not found for job: {job_data.get("title")}', 'warning')
                             continue
 
                         # Check if job already exists
-                        if Job.query.filter_by(title=job_data.get('title'), company_id=company.id).first():
+                        if Job.objects(title=job_data.get('title'), company=company).first():
                             flash(f'Job "{job_data.get("title")}" at {company_name} already exists', 'warning')
                             continue
 
                         # Create job
                         job = Job(
-                            company_id=company.id,
+                            company=company,
                             title=job_data.get('title'),
                             description=job_data.get('description', ''),
                             location=job_data.get('location', ''),
@@ -1147,9 +1133,8 @@ def import_data():
                             posted_date=datetime.now(),
                             is_active=True
                         )
-                        db.session.add(job)
+                        job.save()
 
-                    db.session.commit()
                     flash(f'Successfully imported jobs from JSON', 'success')
                 else:
                     flash('This import type is not currently supported', 'warning')
@@ -1178,19 +1163,19 @@ def import_data():
                     is_remote = row[remote_idx] if remote_idx != -1 else False
 
                     # Find company
-                    company = Company.query.filter_by(name=company_name).first()
+                    company = Company.objects(name=company_name).first()
                     if not company:
                         flash(f'Company "{company_name}" not found for job: {title}', 'warning')
                         continue
 
                     # Check if job already exists
-                    if Job.query.filter_by(title=title, company_id=company.id).first():
+                    if Job.objects(title=title, company=company).first():
                         flash(f'Job "{title}" at {company_name} already exists', 'warning')
                         continue
 
                     # Create job
                     job = Job(
-                        company_id=company.id,
+                        company=company,
                         title=title,
                         description='Imported job - please update description',
                         job_type=job_type,
@@ -1201,16 +1186,13 @@ def import_data():
                         posted_date=datetime.now()
                     )
 
-                    db.session.add(job)
+                    job.save()
                     imported_count += 1
-
-                db.session.commit()
                 flash(f'Successfully imported {imported_count} jobs', 'success')
             else:
                 flash('This import type is not currently supported', 'warning')
 
         except Exception as e:
-            db.session.rollback()
             logging.error(f"Error importing data: {str(e)}")
             flash(f'Error importing data: {str(e)}', 'danger')
     else:
