@@ -50,7 +50,7 @@ class Config:
     # Google Sheets API configuration
     GOOGLE_SHEETS_CLIENT_ID = os.environ.get('GOOGLE_SHEETS_CLIENT_ID', '')
     GOOGLE_SHEETS_CLIENT_SECRET = os.environ.get('GOOGLE_SHEETS_CLIENT_SECRET', '')
-    GOOGLE_SHEETS_REDIRECT_URI = os.environ.get('GOOGLE_SHEETS_REDIRECT_URI', 'http://localhost:5000/')
+    GOOGLE_SHEETS_REDIRECT_URI = os.environ.get('GOOGLE_SHEETS_REDIRECT_URI', 'https://remotehive.in/')
     GOOGLE_SHEETS_SPREADSHEET_ID = os.environ.get('GOOGLE_SHEETS_SPREADSHEET_ID', '1MD3t0g8GZQ8G-7sLut68br9feU7vbjQQ1ytVO4ahkxc')
 
 class DevelopmentConfig(Config):
@@ -86,5 +86,5 @@ config = {
 
 def get_config():
     """Return the appropriate configuration object based on the environment."""
-    env = os.environ.get('FLASK_ENV', 'development')  # Changed default to 'development'
-    return config.get(env, config['development'])
+    env = os.environ.get('FLASK_ENV', 'production')  # Default to production
+    return config.get(env, config['production'])

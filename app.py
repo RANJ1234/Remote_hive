@@ -159,13 +159,17 @@ def connect_to_mongodb():
             try:
                 # Try connecting to local MongoDB as fallback
                 disconnect_all()
+                # Use MongoDB Atlas connection string as fallback
                 connect(
                     db="remotehive",
-                    host="localhost",
-                    port=27017,
+                    host=app.config.get('MONGODB_URI', 'mongodb+srv://ranjeettiwary589:BvNj0KznHubQSCrM@cluster0.qrrpagr.mongodb.net/remotehive?retryWrites=true&w=majority'),
                     alias="default",
                     connect=True,
-                    serverSelectionTimeoutMS=1000
+                    serverSelectionTimeoutMS=3000,
+                    socketTimeoutMS=5000,
+                    connectTimeoutMS=3000,
+                    retryWrites=True,
+                    retryReads=True
                 )
                 logging.info("Connected to local MongoDB successfully")
                 mongodb_connected = True
@@ -305,7 +309,7 @@ def register_blueprints(app):
     with app.app_context():
         try:
             # Import admin blueprint and register it first
-            from admin_fix import admin_bp
+            from admin_clean import admin_bp
             app.register_blueprint(admin_bp)
             logging.info("Registered admin blueprint")
 
@@ -515,12 +519,13 @@ def mongodb_connection_monitor():
 
 logging.info("Application initialized")
 
-# Run the app if this file is executed directly
-if __name__ == "__main__":
-    # Start MongoDB connection monitor in background thread
-    monitor_thread = threading.Thread(target=mongodb_connection_monitor, daemon=True)
-    monitor_thread.start()
-    logging.info("Started MongoDB connection monitor thread")
+# Start MongoDB connection monitor in background thread
+monitor_thread = threading.Thread(target=mongodb_connection_monitor, daemon=True)
+monitor_thread.start()
+logging.info("Started MongoDB connection monitor thread")
 
-    # Run the Flask app with reduced use_reloader setting to avoid connection issues
-    app.run(host="127.0.0.1", port=5000, debug=True, use_reloader=False)
+# Run the app if this file is executed directly (development only)
+if __name__ == "__main__":
+    # This should only be used for development
+    # For production, use a WSGI server like Gunicorn or uWSGI with the wsgi.py file
+    app.run(host="0.0.0.0", port=5000, debug=False, use_reloader=False)
