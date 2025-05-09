@@ -1,8 +1,8 @@
 import multiprocessing
 import os
 
-# Bind to 0.0.0.0:8000 by default
-bind = os.environ.get('GUNICORN_BIND', '0.0.0.0:8000')
+# Bind to 0.0.0.0:5000 by default
+bind = os.environ.get('GUNICORN_BIND', '0.0.0.0:5000')
 
 # Number of worker processes
 # A good rule of thumb is 2-4 x number of CPU cores

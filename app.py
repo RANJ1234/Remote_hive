@@ -4,9 +4,8 @@ import logging.handlers
 import threading
 import time
 from datetime import datetime
-from flask import Flask, request, g, render_template, jsonify
+from flask import Flask, request, g, render_template, jsonify, session
 from werkzeug.middleware.proxy_fix import ProxyFix
-from flask_login import LoginManager
 from mongoengine import connect, disconnect_all
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
@@ -45,7 +44,6 @@ def setup_logging(app):
     werkzeug_logger.setLevel(log_level)
 
 # Initialize Flask extensions
-login_manager = LoginManager()
 compress = Compress()
 
 # Global connection status
@@ -161,13 +159,17 @@ def connect_to_mongodb():
             try:
                 # Try connecting to local MongoDB as fallback
                 disconnect_all()
+                # Use MongoDB Atlas connection string as fallback
                 connect(
                     db="remotehive",
-                    host="localhost",
-                    port=27017,
+                    host=app.config.get('MONGODB_URI', 'mongodb+srv://ranjeettiwary589:BvNj0KznHubQSCrM@cluster0.qrrpagr.mongodb.net/remotehive?retryWrites=true&w=majority'),
                     alias="default",
                     connect=True,
-                    serverSelectionTimeoutMS=1000
+                    serverSelectionTimeoutMS=3000,
+                    socketTimeoutMS=5000,
+                    connectTimeoutMS=3000,
+                    retryWrites=True,
+                    retryReads=True
                 )
                 logging.info("Connected to local MongoDB successfully")
                 mongodb_connected = True
@@ -248,27 +250,10 @@ else:
     import mock_models as models
     logging.warning("Using mock models due to MongoDB connection failure")
 
-# Initialize extensions with the app
-login_manager.init_app(app)
-login_manager.login_view = 'login'
-login_manager.login_message = 'Please log in to access this page.'
-
-# User loader function for Flask-Login
-@login_manager.user_loader
-def load_user(user_id):
-    try:
-        # Check if user_id is a valid ObjectId if using MongoDB
-        if mongodb_connected:
-            from bson import ObjectId
-            if not ObjectId.is_valid(user_id):
-                logging.error(f"Invalid user_id format: {user_id}")
-                return None
-
-        # Get user from the database
-        return models.User.objects(id=user_id).first()
-    except Exception as e:
-        logging.error(f"Error loading user: {e}")
-        return None
+# Session configuration
+app.config['SESSION_TYPE'] = 'filesystem'
+app.config['SESSION_PERMANENT'] = False
+app.config['PERMANENT_SESSION_LIFETIME'] = 3600  # 1 hour
 
 # Test route to verify server is working
 @app.route('/test-server')
@@ -324,7 +309,7 @@ def register_blueprints(app):
     with app.app_context():
         try:
             # Import admin blueprint and register it first
-            from admin_fix import admin_bp
+            from admin_clean import admin_bp
             app.register_blueprint(admin_bp)
             logging.info("Registered admin blueprint")
 
@@ -534,12 +519,13 @@ def mongodb_connection_monitor():
 
 logging.info("Application initialized")
 
-# Run the app if this file is executed directly
-if __name__ == "__main__":
-    # Start MongoDB connection monitor in background thread
-    monitor_thread = threading.Thread(target=mongodb_connection_monitor, daemon=True)
-    monitor_thread.start()
-    logging.info("Started MongoDB connection monitor thread")
+# Start MongoDB connection monitor in background thread
+monitor_thread = threading.Thread(target=mongodb_connection_monitor, daemon=True)
+monitor_thread.start()
+logging.info("Started MongoDB connection monitor thread")
 
-    # Run the Flask app with reduced use_reloader setting to avoid connection issues
-    app.run(host="127.0.0.1", port=5000, debug=True, use_reloader=False)
+# Run the app if this file is executed directly (development only)
+if __name__ == "__main__":
+    # This should only be used for development
+    # For production, use a WSGI server like Gunicorn or uWSGI with the wsgi.py file
+    app.run(host="0.0.0.0", port=5000, debug=False, use_reloader=False)
